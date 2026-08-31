@@ -1,0 +1,72 @@
+package pub.galactic.chorahost.resource;
+
+import java.net.URI;
+import java.util.UUID;
+
+import pub.galactic.chorahost.dto.CardVerificationResponse;
+import pub.galactic.chorahost.dto.ChoreCardResponse;
+import pub.galactic.chorahost.dto.CreateChoreCardRequest;
+import pub.galactic.chorahost.entity.ChoreCard;
+import pub.galactic.chorahost.entity.User;
+import pub.galactic.chorahost.security.CurrentUserService;
+import pub.galactic.chorahost.service.ChoreCardService;
+import pub.galactic.chorahost.service.ChoreCardService.VerificationResult;
+import io.quarkus.security.Authenticated;
+import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+@Path("/api/v1/cards")
+@Authenticated
+@Produces(MediaType.APPLICATION_JSON)
+public class ChoreCardResource {
+
+    @Inject
+    ChoreCardService choreCardService;
+
+    @Inject
+    CurrentUserService currentUserService;
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createCard(@Valid CreateChoreCardRequest request) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        ChoreCard card = choreCardService.createCard(request, requester);
+        return Response.created(URI.create("/api/v1/cards/" + card.id))
+                .entity(ChoreCardResponse.from(card))
+                .build();
+    }
+
+    @POST
+    @Path("/{cardId}/claim")
+    public ChoreCardResponse claimCard(@PathParam("cardId") UUID cardId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return ChoreCardResponse.from(choreCardService.claimCard(cardId, requester));
+    }
+
+    @POST
+    @Path("/{cardId}/complete")
+    public ChoreCardResponse completeCard(@PathParam("cardId") UUID cardId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return ChoreCardResponse.from(choreCardService.completeCard(cardId, requester));
+    }
+
+    @POST
+    @Path("/{cardId}/verify")
+    public CardVerificationResponse verifyCard(@PathParam("cardId") UUID cardId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        VerificationResult result = choreCardService.verifyCard(cardId, requester);
+        return new CardVerificationResponse(
+                ChoreCardResponse.from(result.card()),
+                result.xpGained(),
+                result.goldGained(),
+                result.leveledUp(),
+                result.newLevel());
+    }
+}

@@ -61,7 +61,7 @@ public class TeamService {
 
         User target = userRepository.findByIdOptional(targetUserId)
                 .orElseThrow(() -> ApiException.notFound("User not found: " + targetUserId));
-        return toMemberResponse(target, role);
+        return toMemberResponse(target, targetMembership);
     }
 
     @Transactional
@@ -88,12 +88,13 @@ public class TeamService {
     public List<TeamMemberResponse> getLeaderboard(UUID teamId) {
         requireTeamExists(teamId);
 
-        List<TeamMembership> memberships = membershipRepository.findByTeam(teamId);
-        Map<UUID, TeamRole> roleByUserId = memberships.stream()
-                .collect(Collectors.toMap(m -> m.userId, m -> m.role));
+        List<TeamMembership> memberships = membershipRepository.findByTeamOrderByLevelDescCurrentXpDesc(teamId);
+        Map<UUID, User> usersById = userRepository
+                .list("id in ?1", memberships.stream().map(m -> m.userId).toList()).stream()
+                .collect(Collectors.toMap(u -> u.id, u -> u));
 
-        return userRepository.findByIdsOrderByLevelDescCurrentXpDesc(List.copyOf(roleByUserId.keySet())).stream()
-                .map(user -> toMemberResponse(user, roleByUserId.get(user.id)))
+        return memberships.stream()
+                .map(m -> toMemberResponse(usersById.get(m.userId), m))
                 .toList();
     }
 
@@ -111,7 +112,8 @@ public class TeamService {
                 .collect(Collectors.toMap(t -> t.id, t -> t.name));
 
         return memberships.stream()
-                .map(m -> new TeamMembershipResponse(m.teamId, teamNames.get(m.teamId), m.role, m.joinedAt))
+                .map(m -> new TeamMembershipResponse(m.teamId, teamNames.get(m.teamId), m.role, m.level,
+                        m.currentXp, m.level * 1000, m.gold, m.joinedAt))
                 .toList();
     }
 
@@ -144,7 +146,8 @@ public class TeamService {
         }
     }
 
-    private TeamMemberResponse toMemberResponse(User user, TeamRole role) {
-        return new TeamMemberResponse(user.id, user.name, user.email, user.level, user.currentXp, user.gold, role);
+    private TeamMemberResponse toMemberResponse(User user, TeamMembership membership) {
+        return new TeamMemberResponse(user.id, user.name, user.email, membership.level, membership.currentXp,
+                membership.level * 1000, membership.gold, membership.role);
     }
 }

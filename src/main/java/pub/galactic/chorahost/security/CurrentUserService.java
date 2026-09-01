@@ -41,17 +41,15 @@ public class CurrentUserService {
             throw new ApiException(jakarta.ws.rs.core.Response.Status.UNAUTHORIZED, "Authentication required");
         }
 
-        String subject = idToken.getSubject();
         String email = idToken.getClaim("email");
         String name = idToken.getClaim("name");
         if (email == null) {
             throw ApiException.badRequest("Google ID token did not include an email claim");
         }
 
-        cached = userRepository.findByOidcSubject(subject).orElseGet(() -> {
-            LOG.infof("Provisioning new user for subject %s (%s)", subject, email);
+        cached = userRepository.findByEmail(email).orElseGet(() -> {
+            LOG.infof("Provisioning new user for email %s", email);
             User user = new User();
-            user.oidcSubject = subject;
             user.email = email;
             user.name = name != null ? name : email;
             userRepository.persist(user);

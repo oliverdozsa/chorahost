@@ -1,32 +1,33 @@
 package pub.galactic.chorahost.service;
 
-import pub.galactic.chorahost.entity.User;
+import pub.galactic.chorahost.entity.TeamMembership;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class GamificationService {
 
     /**
-     * Awards XP and gold to a user and resolves any level-up, handling XP
-     * overflow into the next level. The threshold to reach the next level is
-     * {@code currentLevel * 1000}.
+     * Awards XP and gold to a team membership and resolves any level-up,
+     * handling XP overflow into the next level. Level/XP/gold are tracked
+     * per team membership, not globally on the user. The threshold to reach
+     * the next level is {@code currentLevel * 1000}.
      */
-    public LevelUpResult awardRewards(User user, int xpReward, int goldReward) {
-        user.gold += goldReward;
+    public LevelUpResult awardRewards(TeamMembership membership, int xpReward, int goldReward) {
+        membership.gold += goldReward;
 
-        int totalXp = user.currentXp + xpReward;
+        int totalXp = membership.currentXp + xpReward;
         boolean leveledUp = false;
-        int nextLevelXp = user.level * 1000;
+        int nextLevelXp = membership.level * 1000;
 
         while (totalXp >= nextLevelXp) {
             totalXp -= nextLevelXp;
-            user.level += 1;
+            membership.level += 1;
             leveledUp = true;
-            nextLevelXp = user.level * 1000;
+            nextLevelXp = membership.level * 1000;
         }
-        user.currentXp = totalXp;
+        membership.currentXp = totalXp;
 
-        return new LevelUpResult(leveledUp, user.level);
+        return new LevelUpResult(leveledUp, membership.level);
     }
 
     public record LevelUpResult(boolean leveledUp, int newLevel) {

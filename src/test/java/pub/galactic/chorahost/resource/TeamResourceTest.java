@@ -20,7 +20,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  */
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class TeamResourceTest {
+class TeamResourceTest extends AbstractResourceTest {
 
     private static final String OWNER_SUB = "team-owner-sub";
     private static final String OWNER_EMAIL = "owner@chorahost.test";

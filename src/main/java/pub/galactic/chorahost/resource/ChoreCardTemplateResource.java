@@ -43,14 +43,4 @@ public class ChoreCardTemplateResource {
                 .entity(ChoreCardTemplateResponse.from(template))
                 .build();
     }
-
-    @POST
-    @Path("/{templateId}/instantiate")
-    public Response instantiate(@PathParam("templateId") UUID templateId, InstantiateCardRequest overrides) {
-        User requester = currentUserService.getOrCreateCurrentUser();
-        ChoreCard card = templateService.instantiateCard(templateId, overrides, requester);
-        return Response.created(URI.create("/api/v1/cards/" + card.id))
-                .entity(ChoreCardResponse.from(card))
-                .build();
-    }
 }

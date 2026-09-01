@@ -43,6 +43,15 @@ public class TeamMembership extends PanacheEntityBase {
     @Column(nullable = false)
     public TeamRole role;
 
+    @Column(nullable = false)
+    public Integer level = 1;
+
+    @Column(name = "current_xp", nullable = false)
+    public Integer currentXp = 0;
+
+    @Column(nullable = false)
+    public Integer gold = 0;
+
     @Column(name = "joined_at", nullable = false, updatable = false)
     public Instant joinedAt;
 

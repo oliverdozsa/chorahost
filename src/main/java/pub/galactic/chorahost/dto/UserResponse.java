@@ -10,10 +10,6 @@ public record UserResponse(
         UUID id,
         String name,
         String email,
-        Integer level,
-        Integer currentXp,
-        Integer nextLevelXp,
-        Integer gold,
         Instant createdAt,
         List<TeamMembershipResponse> teams) {
 
@@ -22,10 +18,6 @@ public record UserResponse(
                 user.id,
                 user.name,
                 user.email,
-                user.level,
-                user.currentXp,
-                user.level * 1000,
-                user.gold,
                 user.createdAt,
                 teams);
     }

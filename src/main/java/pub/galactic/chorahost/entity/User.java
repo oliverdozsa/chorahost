@@ -22,13 +22,6 @@ public class User extends PanacheEntityBase {
     @UuidGenerator
     public UUID id;
 
-    /**
-     * The 'sub' claim of the Google-issued OIDC ID token. Used to resolve the
-     * authenticated principal to a local user record.
-     */
-    @Column(name = "oidc_subject", nullable = false, unique = true)
-    public String oidcSubject;
-
     @Email
     @NotBlank
     @Column(nullable = false, unique = true)
@@ -37,15 +30,6 @@ public class User extends PanacheEntityBase {
     @NotBlank
     @Column(nullable = false)
     public String name;
-
-    @Column(nullable = false)
-    public Integer level = 1;
-
-    @Column(name = "current_xp", nullable = false)
-    public Integer currentXp = 0;
-
-    @Column(nullable = false)
-    public Integer gold = 0;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;

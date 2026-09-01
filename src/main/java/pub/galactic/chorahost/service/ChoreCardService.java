@@ -6,12 +6,12 @@ import java.util.UUID;
 
 import pub.galactic.chorahost.dto.CreateChoreCardRequest;
 import pub.galactic.chorahost.entity.ChoreCard;
+import pub.galactic.chorahost.entity.TeamMembership;
 import pub.galactic.chorahost.entity.User;
 import pub.galactic.chorahost.enums.CardStatus;
 import pub.galactic.chorahost.enums.TeamRole;
 import pub.galactic.chorahost.exception.ApiException;
 import pub.galactic.chorahost.repository.ChoreCardRepository;
-import pub.galactic.chorahost.repository.UserRepository;
 import pub.galactic.chorahost.service.GamificationService.LevelUpResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -29,9 +29,6 @@ public class ChoreCardService {
 
     @Inject
     GamificationService gamificationService;
-
-    @Inject
-    UserRepository userRepository;
 
     public List<ChoreCard> getAvailableCardsForTeam(UUID teamId) {
         return choreCardRepository.findAvailableForTeam(teamId);
@@ -106,10 +103,10 @@ public class ChoreCardService {
         card.status = CardStatus.VERIFIED;
         card.verifiedAt = Instant.now();
 
-        User assignee = userRepository.findByIdOptional(card.assignedUserId)
-                .orElseThrow(() -> ApiException.notFound("Assigned user not found"));
+        TeamMembership assigneeMembership = teamService.findMembership(card.teamId, card.assignedUserId)
+                .orElseThrow(() -> ApiException.notFound("Assigned user is not a member of this team"));
 
-        LevelUpResult levelUpResult = gamificationService.awardRewards(assignee, card.xpReward, card.goldReward);
+        LevelUpResult levelUpResult = gamificationService.awardRewards(assigneeMembership, card.xpReward, card.goldReward);
 
         return new VerificationResult(card, card.xpReward, card.goldReward, levelUpResult.leveledUp(), levelUpResult.newLevel());
     }

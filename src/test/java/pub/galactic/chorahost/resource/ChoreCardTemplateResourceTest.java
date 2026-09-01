@@ -19,10 +19,12 @@ import org.junit.jupiter.api.TestMethodOrder;
  */
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ChoreCardTemplateResourceTest {
+class ChoreCardTemplateResourceTest extends AbstractResourceTest {
 
     private static final String ADMIN_SUB = "template-admin-sub";
     private static final String ADMIN_EMAIL = "template-admin@chorahost.test";
+    private static final String OUTSIDER_SUB = "not-a-team-member-sub";
+    private static final String OUTSIDER_EMAIL = "outsider@chorahost.test";
 
     private static String teamId;
     private static String templateId;
@@ -78,54 +80,10 @@ class ChoreCardTemplateResourceTest {
 
     @Test
     @Order(3)
-    @TestSecurity(user = ADMIN_SUB)
+    @TestSecurity(user = OUTSIDER_SUB)
     @OidcSecurity(claims = {
-            @Claim(key = "sub", value = ADMIN_SUB),
-            @Claim(key = "email", value = ADMIN_EMAIL),
-            @Claim(key = "name", value = "Template Admin")
-    })
-    void instantiatingTemplateCreatesAvailableCard() {
-        String firstCardId = given()
-                .contentType("application/json")
-                .body("{}")
-                .when().post("/api/v1/card-templates/" + templateId + "/instantiate")
-                .then().statusCode(201)
-                .body("status", is("AVAILABLE"))
-                .body("templateId", is(templateId))
-                .body("title", is("Take out the trash"))
-                .body("xpReward", is(50))
-                .extract().path("id");
-
-        assertNotBlank(firstCardId);
-    }
-
-    @Test
-    @Order(4)
-    @TestSecurity(user = ADMIN_SUB)
-    @OidcSecurity(claims = {
-            @Claim(key = "sub", value = ADMIN_SUB),
-            @Claim(key = "email", value = ADMIN_EMAIL),
-            @Claim(key = "name", value = "Template Admin")
-    })
-    void instantiatingWithOverridesAppliesThem() {
-        given()
-                .contentType("application/json")
-                .body("{\"xpReward\":75,\"goldReward\":8}")
-                .when().post("/api/v1/card-templates/" + templateId + "/instantiate")
-                .then().statusCode(201)
-                .body("status", is("AVAILABLE"))
-                .body("xpReward", is(75))
-                .body("goldReward", is(8))
-                .body("title", is("Take out the trash"))
-                .body("id", notNullValue());
-    }
-
-    @Test
-    @Order(5)
-    @TestSecurity(user = "not-a-team-member-sub")
-    @OidcSecurity(claims = {
-            @Claim(key = "sub", value = "not-a-team-member-sub"),
-            @Claim(key = "email", value = "outsider@chorahost.test"),
+            @Claim(key = "sub", value = OUTSIDER_SUB),
+            @Claim(key = "email", value = OUTSIDER_EMAIL),
             @Claim(key = "name", value = "Outsider")
     })
     void nonMemberCannotCreateTemplate() {

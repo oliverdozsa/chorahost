@@ -19,6 +19,10 @@ public class TeamMembershipRepository implements PanacheRepositoryBase<TeamMembe
         return find("teamId", teamId).list();
     }
 
+    public List<TeamMembership> findByTeamOrderByLevelDescCurrentXpDesc(UUID teamId) {
+        return find("teamId = ?1 order by level desc, currentXp desc", teamId).list();
+    }
+
     public List<TeamMembership> findByUser(UUID userId) {
         return find("userId", userId).list();
     }

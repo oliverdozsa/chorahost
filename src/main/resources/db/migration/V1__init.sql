@@ -6,7 +6,6 @@ create table teams (
 
 create table users (
     id uuid primary key,
-    oidc_subject varchar(255) not null unique,
     email varchar(255) not null unique,
     name varchar(255) not null,
     level integer not null default 1,

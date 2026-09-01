@@ -18,7 +18,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  */
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ChoreCardResourceTest {
+class ChoreCardResourceTest extends AbstractResourceTest {
 
     private static final String ADMIN_SUB = "card-admin-sub";
     private static final String ADMIN_EMAIL = "card-admin@chorahost.test";
@@ -184,8 +184,8 @@ class ChoreCardResourceTest {
         given()
                 .when().get("/api/v1/users/" + playerId)
                 .then().statusCode(200)
-                .body("currentXp", is(0))
-                .body("gold", is(0));
+                .body("teams.find { it.teamId == '" + teamId + "' }.currentXp", is(0))
+                .body("teams.find { it.teamId == '" + teamId + "' }.gold", is(0));
     }
 
     @Test
@@ -223,9 +223,9 @@ class ChoreCardResourceTest {
         given()
                 .when().get("/api/v1/users/" + playerId)
                 .then().statusCode(200)
-                .body("currentXp", is(100))
-                .body("gold", is(10))
-                .body("level", is(1));
+                .body("teams.find { it.teamId == '" + teamId + "' }.currentXp", is(100))
+                .body("teams.find { it.teamId == '" + teamId + "' }.gold", is(10))
+                .body("teams.find { it.teamId == '" + teamId + "' }.level", is(1));
     }
 
     @Test
@@ -278,9 +278,9 @@ class ChoreCardResourceTest {
         given()
                 .when().get("/api/v1/users/" + playerId)
                 .then().statusCode(200)
-                .body("level", is(2))
-                .body("currentXp", is(50))
-                .body("gold", is(15));
+                .body("teams.find { it.teamId == '" + teamId + "' }.level", is(2))
+                .body("teams.find { it.teamId == '" + teamId + "' }.currentXp", is(50))
+                .body("teams.find { it.teamId == '" + teamId + "' }.gold", is(15));
     }
 
     @Test

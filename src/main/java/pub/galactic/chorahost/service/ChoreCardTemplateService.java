@@ -23,9 +23,6 @@ public class ChoreCardTemplateService {
     ChoreCardTemplateRepository templateRepository;
 
     @Inject
-    ChoreCardRepository choreCardRepository;
-
-    @Inject
     TeamService teamService;
 
     public List<ChoreCardTemplate> getTemplatesForTeam(UUID teamId) {
@@ -49,31 +46,5 @@ public class ChoreCardTemplateService {
 
         templateRepository.persist(template);
         return template;
-    }
-
-    @Transactional
-    public ChoreCard instantiateCard(UUID templateId, InstantiateCardRequest overrides, User requester) {
-        ChoreCardTemplate template = templateRepository.findByIdOptional(templateId)
-                .orElseThrow(() -> ApiException.notFound("Template not found: " + templateId));
-        teamService.requireAdminOrTeamAdmin(template.teamId, requester);
-
-        ChoreCard card = new ChoreCard();
-        card.teamId = template.teamId;
-        card.templateId = template.id;
-        card.title = overrides != null && overrides.title() != null ? overrides.title() : template.title;
-        card.description = overrides != null && overrides.description() != null
-                ? overrides.description() : template.description;
-        card.rarity = template.rarity;
-        card.complexity = template.complexity;
-        card.estimatedMinutes = overrides != null && overrides.estimatedMinutes() != null
-                ? overrides.estimatedMinutes() : template.estimatedMinutes;
-        card.xpReward = overrides != null && overrides.xpReward() != null ? overrides.xpReward() : template.xpReward;
-        card.goldReward = overrides != null && overrides.goldReward() != null
-                ? overrides.goldReward() : template.goldReward;
-        card.itemDrop = overrides != null && overrides.itemDrop() != null ? overrides.itemDrop() : template.itemDrop;
-        card.status = CardStatus.AVAILABLE;
-
-        choreCardRepository.persist(card);
-        return card;
     }
 }

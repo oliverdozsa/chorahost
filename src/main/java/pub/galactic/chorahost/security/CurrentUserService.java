@@ -24,7 +24,6 @@ public class CurrentUserService {
     SecurityIdentity securityIdentity;
 
     @Inject
-    @IdToken
     JsonWebToken idToken;
 
     @Inject

@@ -11,8 +11,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ChoreCardRepository implements PanacheRepositoryBase<ChoreCard, UUID> {
 
-    public List<ChoreCard> findAvailableForTeam(UUID teamId) {
-        return find("teamId = ?1 and status = ?2", teamId, CardStatus.AVAILABLE).list();
+    public List<ChoreCard> findForTeamByStatuses(UUID teamId, List<CardStatus> statuses) {
+        return find("teamId = ?1 and status in ?2", teamId, statuses).list();
     }
 
     public List<ChoreCard> findHand(UUID userId) {

@@ -30,8 +30,12 @@ public class ChoreCardService {
     @Inject
     GamificationService gamificationService;
 
-    public List<ChoreCard> getAvailableCardsForTeam(UUID teamId) {
-        return choreCardRepository.findAvailableForTeam(teamId);
+    public List<ChoreCard> getCardsForTeam(UUID teamId, List<CardStatus> statuses, User requester) {
+        teamService.requireMembership(teamId, requester.id);
+        List<CardStatus> effectiveStatuses = (statuses == null || statuses.isEmpty())
+                ? List.of(CardStatus.AVAILABLE)
+                : statuses;
+        return choreCardRepository.findForTeamByStatuses(teamId, effectiveStatuses);
     }
 
     public List<ChoreCard> getHand(UUID userId) {

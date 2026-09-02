@@ -1,6 +1,7 @@
 package pub.galactic.chorahost.resource;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +13,8 @@ import pub.galactic.chorahost.dto.TeamMemberResponse;
 import pub.galactic.chorahost.dto.TeamResponse;
 import pub.galactic.chorahost.entity.Team;
 import pub.galactic.chorahost.entity.User;
+import pub.galactic.chorahost.enums.CardStatus;
+import pub.galactic.chorahost.exception.ApiException;
 import pub.galactic.chorahost.security.CurrentUserService;
 import pub.galactic.chorahost.service.ChoreCardService;
 import pub.galactic.chorahost.service.ChoreCardTemplateService;
@@ -25,6 +28,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -54,8 +58,29 @@ public class TeamResource {
 
     @GET
     @Path("/{teamId}/cards")
-    public List<ChoreCardResponse> getTeamCards(@PathParam("teamId") UUID teamId) {
-        return choreCardService.getAvailableCardsForTeam(teamId).stream().map(ChoreCardResponse::from).toList();
+    public List<ChoreCardResponse> getTeamCards(@PathParam("teamId") UUID teamId,
+            @QueryParam("status") String status) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        List<CardStatus> statuses = parseStatuses(status);
+        return choreCardService.getCardsForTeam(teamId, statuses, requester).stream()
+                .map(ChoreCardResponse::from).toList();
+    }
+
+    private static List<CardStatus> parseStatuses(String status) {
+        if (status == null || status.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(status.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> {
+                    try {
+                        return CardStatus.valueOf(s.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        throw ApiException.badRequest("Invalid card status: " + s);
+                    }
+                })
+                .toList();
     }
 
     @GET

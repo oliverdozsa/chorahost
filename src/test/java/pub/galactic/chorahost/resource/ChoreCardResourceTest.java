@@ -307,6 +307,44 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 .body("cardCompleted.status", is("VERIFIED"));
     }
 
+    @Test
+    @Order(16)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void teamCardsCanBeFilteredByMultipleStatuses() {
+        // No status param defaults to AVAILABLE only.
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/cards")
+                .then().statusCode(200)
+                .body("findAll { it.status != 'AVAILABLE' }", org.hamcrest.Matchers.empty());
+
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/cards?status=COMPLETED,VERIFIED")
+                .then().statusCode(200)
+                .body("find { it.id == '" + cardId + "' }.status", is("VERIFIED"))
+                .body("find { it.id == '" + bigCardId + "' }.status", is("VERIFIED"))
+                .body("findAll { it.status == 'AVAILABLE' }", org.hamcrest.Matchers.empty());
+    }
+
+    @Test
+    @Order(17)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void nonMemberCannotListTeamCards() {
+        String outsideTeamId = "00000000-0000-0000-0000-000000000000";
+        given()
+                .when().get("/api/v1/teams/" + outsideTeamId + "/cards")
+                .then().statusCode(403);
+    }
+
     private static String cardPayload(int xpReward, int goldReward) {
         return "{"
                 + "\"teamId\":\"" + teamId + "\","

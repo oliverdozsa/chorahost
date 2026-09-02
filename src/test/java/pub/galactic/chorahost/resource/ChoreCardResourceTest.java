@@ -2,6 +2,7 @@ package pub.galactic.chorahost.resource;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
@@ -29,6 +30,7 @@ class ChoreCardResourceTest extends AbstractResourceTest {
     private static String playerId;
     private static String cardId;
     private static String bigCardId;
+    private static String completedCardId;
 
     @Test
     @Order(1)
@@ -343,6 +345,97 @@ class ChoreCardResourceTest extends AbstractResourceTest {
         given()
                 .when().get("/api/v1/teams/" + outsideTeamId + "/cards")
                 .then().statusCode(403);
+    }
+
+    @Test
+    @Order(18)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void onlyAssigneeCanAcknowledgeReward() {
+        given()
+                .when().post("/api/v1/cards/" + cardId + "/acknowledge-reward")
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(19)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void assigneeAcknowledgesRewardIdempotently() {
+        // cardId is VERIFIED at this point (order 11).
+        String firstAcknowledgedAt = given()
+                .when().post("/api/v1/cards/" + cardId + "/acknowledge-reward")
+                .then().statusCode(200)
+                .body("id", is(cardId))
+                .body("rewardAcknowledgedAt", notNullValue())
+                .extract().path("rewardAcknowledgedAt");
+
+        // Calling it again must not overwrite the timestamp (compare as
+        // Instants since Postgres round-trips with microsecond, not
+        // nanosecond, precision).
+        String secondAcknowledgedAt = given()
+                .when().post("/api/v1/cards/" + cardId + "/acknowledge-reward")
+                .then().statusCode(200)
+                .extract().path("rewardAcknowledgedAt");
+        // Postgres round-trips at microsecond precision (vs. Java's
+        // nanosecond Instant.now()), so compare within a small tolerance
+        // rather than exact equality; a genuinely re-set timestamp would be
+        // visibly later than that.
+        java.time.Duration drift = java.time.Duration.between(
+                java.time.Instant.parse(firstAcknowledgedAt), java.time.Instant.parse(secondAcknowledgedAt)).abs();
+        org.assertj.core.api.Assertions.assertThat(drift).isLessThan(java.time.Duration.ofMillis(1));
+    }
+
+    @Test
+    @Order(20)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void adminCreatesCompletedButUnverifiedCard() {
+        completedCardId = given()
+                .contentType("application/json")
+                .body(cardPayload(10, 1))
+                .when().post("/api/v1/cards")
+                .then().statusCode(201)
+                .extract().path("id");
+    }
+
+    @Test
+    @Order(21)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void playerClaimsAndCompletesCardWithoutVerification() {
+        given().when().post("/api/v1/cards/" + completedCardId + "/claim").then().statusCode(200);
+        given().when().post("/api/v1/cards/" + completedCardId + "/complete").then().statusCode(200);
+    }
+
+    @Test
+    @Order(22)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void nonVerifiedCardCannotAcknowledgeReward() {
+        given()
+                .when().post("/api/v1/cards/" + completedCardId + "/acknowledge-reward")
+                .then().statusCode(409);
     }
 
     private static String cardPayload(int xpReward, int goldReward) {

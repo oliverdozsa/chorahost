@@ -58,6 +58,13 @@ public class ChoreCardResource {
     }
 
     @POST
+    @Path("/{cardId}/acknowledge-reward")
+    public ChoreCardResponse acknowledgeReward(@PathParam("cardId") UUID cardId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return ChoreCardResponse.from(choreCardService.acknowledgeReward(cardId, requester));
+    }
+
+    @POST
     @Path("/{cardId}/verify")
     public CardVerificationResponse verifyCard(@PathParam("cardId") UUID cardId) {
         User requester = currentUserService.getOrCreateCurrentUser();

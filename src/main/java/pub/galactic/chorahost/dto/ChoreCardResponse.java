@@ -24,7 +24,8 @@ public record ChoreCardResponse(
         Instant createdAt,
         Instant claimedAt,
         Instant completedAt,
-        Instant verifiedAt) {
+        Instant verifiedAt,
+        Instant rewardAcknowledgedAt) {
 
     public static ChoreCardResponse from(ChoreCard card) {
         return new ChoreCardResponse(
@@ -44,6 +45,7 @@ public record ChoreCardResponse(
                 card.createdAt,
                 card.claimedAt,
                 card.completedAt,
-                card.verifiedAt);
+                card.verifiedAt,
+                card.rewardAcknowledgedAt);
     }
 }

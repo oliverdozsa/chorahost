@@ -115,6 +115,22 @@ public class ChoreCardService {
         return new VerificationResult(card, card.xpReward, card.goldReward, levelUpResult.leveledUp(), levelUpResult.newLevel());
     }
 
+    @Transactional
+    public ChoreCard acknowledgeReward(UUID cardId, User requester) {
+        ChoreCard card = requireCard(cardId);
+        if (card.status != CardStatus.VERIFIED) {
+            throw ApiException.conflict("Card must be VERIFIED to acknowledge its reward: " + card.status);
+        }
+        if (!requester.id.equals(card.assignedUserId)) {
+            throw new ApiException(Response.Status.FORBIDDEN, "Only the assignee can acknowledge this card's reward");
+        }
+
+        if (card.rewardAcknowledgedAt == null) {
+            card.rewardAcknowledgedAt = Instant.now();
+        }
+        return card;
+    }
+
     private ChoreCard requireCard(UUID cardId) {
         return choreCardRepository.findByIdOptional(cardId)
                 .orElseThrow(() -> ApiException.notFound("Card not found: " + cardId));

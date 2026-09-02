@@ -87,6 +87,9 @@ public class ChoreCard extends PanacheEntityBase {
     @Column(name = "verified_at")
     public Instant verifiedAt;
 
+    @Column(name = "reward_acknowledged_at")
+    public Instant rewardAcknowledgedAt;
+
     @jakarta.persistence.PrePersist
     void prePersist() {
         if (createdAt == null) {

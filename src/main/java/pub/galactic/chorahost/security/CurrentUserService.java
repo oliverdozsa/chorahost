@@ -1,9 +1,9 @@
 package pub.galactic.chorahost.security;
 
+import pub.galactic.chorahost.dev.DevUserPrincipal;
 import pub.galactic.chorahost.entity.User;
 import pub.galactic.chorahost.exception.ApiException;
 import pub.galactic.chorahost.repository.UserRepository;
-import io.quarkus.oidc.IdToken;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -40,8 +40,17 @@ public class CurrentUserService {
             throw new ApiException(jakarta.ws.rs.core.Response.Status.UNAUTHORIZED, "Authentication required");
         }
 
-        String email = idToken.getClaim("email");
-        String name = idToken.getClaim("name");
+        String email;
+        String name;
+        if (securityIdentity.getPrincipal() instanceof DevUserPrincipal devUser) {
+            // Dev-mode impersonation via DevHeaderAuthMechanism: no real ID
+            // token to pull claims from.
+            email = devUser.email();
+            name = email.split("@")[0];
+        } else {
+            email = idToken.getClaim("email");
+            name = idToken.getClaim("name");
+        }
         if (email == null) {
             throw ApiException.badRequest("Google ID token did not include an email claim");
         }

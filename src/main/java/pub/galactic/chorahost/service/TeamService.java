@@ -147,7 +147,7 @@ public class TeamService {
     }
 
     private TeamMemberResponse toMemberResponse(User user, TeamMembership membership) {
-        return new TeamMemberResponse(user.id, user.name, user.email, membership.level, membership.currentXp,
-                membership.level * 1000, membership.gold, membership.role);
+        return new TeamMemberResponse(user.id, user.name, user.givenName, user.familyName, user.email,
+                membership.level, membership.currentXp, membership.level * 1000, membership.gold, membership.role);
     }
 }

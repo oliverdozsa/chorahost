@@ -42,14 +42,20 @@ public class CurrentUserService {
 
         String email;
         String name;
+        String givenName;
+        String familyName;
         if (securityIdentity.getPrincipal() instanceof DevUserPrincipal devUser) {
             // Dev-mode impersonation via DevHeaderAuthMechanism: no real ID
             // token to pull claims from.
             email = devUser.email();
             name = email.split("@")[0];
+            givenName = name;
+            familyName = name;
         } else {
             email = idToken.getClaim("email");
             name = idToken.getClaim("name");
+            givenName = idToken.getClaim("given_name");
+            familyName = idToken.getClaim("family_name");
         }
         if (email == null) {
             throw ApiException.badRequest("Google ID token did not include an email claim");
@@ -60,6 +66,8 @@ public class CurrentUserService {
             User user = new User();
             user.email = email;
             user.name = name != null ? name : email;
+            user.givenName = givenName;
+            user.familyName = familyName;
             userRepository.persist(user);
             return user;
         });

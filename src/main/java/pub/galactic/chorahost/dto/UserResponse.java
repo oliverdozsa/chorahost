@@ -9,6 +9,8 @@ import pub.galactic.chorahost.entity.User;
 public record UserResponse(
         UUID id,
         String name,
+        String givenName,
+        String familyName,
         String email,
         Instant createdAt,
         List<TeamMembershipResponse> teams) {
@@ -17,6 +19,8 @@ public record UserResponse(
         return new UserResponse(
                 user.id,
                 user.name,
+                user.givenName,
+                user.familyName,
                 user.email,
                 user.createdAt,
                 teams);

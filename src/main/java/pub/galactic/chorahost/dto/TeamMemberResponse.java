@@ -12,6 +12,8 @@ import pub.galactic.chorahost.enums.TeamRole;
 public record TeamMemberResponse(
         UUID userId,
         String name,
+        String givenName,
+        String familyName,
         String email,
         Integer level,
         Integer currentXp,

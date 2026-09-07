@@ -31,6 +31,12 @@ public class User extends PanacheEntityBase {
     @Column(nullable = false)
     public String name;
 
+    @Column(name = "given_name")
+    public String givenName;
+
+    @Column(name = "family_name")
+    public String familyName;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;
 

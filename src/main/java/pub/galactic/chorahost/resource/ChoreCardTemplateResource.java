@@ -1,13 +1,9 @@
 package pub.galactic.chorahost.resource;
 
 import java.net.URI;
-import java.util.UUID;
 
-import pub.galactic.chorahost.dto.ChoreCardResponse;
 import pub.galactic.chorahost.dto.ChoreCardTemplateResponse;
 import pub.galactic.chorahost.dto.CreateChoreCardTemplateRequest;
-import pub.galactic.chorahost.dto.InstantiateCardRequest;
-import pub.galactic.chorahost.entity.ChoreCard;
 import pub.galactic.chorahost.entity.ChoreCardTemplate;
 import pub.galactic.chorahost.entity.User;
 import pub.galactic.chorahost.security.CurrentUserService;
@@ -18,7 +14,6 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;

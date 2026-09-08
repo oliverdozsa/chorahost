@@ -4,13 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import pub.galactic.chorahost.dto.CreateChoreCardTemplateRequest;
-import pub.galactic.chorahost.dto.InstantiateCardRequest;
-import pub.galactic.chorahost.entity.ChoreCard;
 import pub.galactic.chorahost.entity.ChoreCardTemplate;
 import pub.galactic.chorahost.entity.User;
-import pub.galactic.chorahost.enums.CardStatus;
-import pub.galactic.chorahost.exception.ApiException;
-import pub.galactic.chorahost.repository.ChoreCardRepository;
 import pub.galactic.chorahost.repository.ChoreCardTemplateRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

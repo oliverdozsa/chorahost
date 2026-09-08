@@ -64,24 +64,24 @@ public class DevDataSeeder {
         membership(household, bob, TeamRole.USER);
 
         card(household, "Wash the dishes", "Clean and put away all dishes after dinner.",
-                Rarity.COMMON, 2, 15, 10, 5, null, CardStatus.AVAILABLE, null);
+                Rarity.COMMON, 2, 15, 10, 5, null, CardStatus.AVAILABLE, null, "https://i.ibb.co/9mjP6TvW/clean-dishes.jpg");
         card(household, "Vacuum the living room", "Vacuum carpets and rugs in the living room.",
-                Rarity.COMMON, 3, 20, 15, 5, null, CardStatus.CLAIMED, bob);
+                Rarity.COMMON, 3, 20, 15, 5, null, CardStatus.CLAIMED, bob, "https://i.ibb.co/4RL6jD0J/vacuum.jpg");
         card(household, "Deep clean the bathroom", "Scrub tub, sink, toilet, and mop the floor.",
-                Rarity.RARE, 6, 45, 40, 20, "Sparkle Sponge", CardStatus.COMPLETED, bob);
+                Rarity.RARE, 6, 45, 40, 20, "Sparkle Sponge", CardStatus.COMPLETED, bob, "https://i.ibb.co/Fb98Wsdq/deep-clean-bathroom.jpg");
         card(household, "Mow the lawn", "Mow front and back yard, trim edges.",
-                Rarity.EPIC, 7, 60, 60, 30, "Golden Shears", CardStatus.VERIFIED, alice);
+                Rarity.EPIC, 7, 60, 60, 30, "Golden Shears", CardStatus.VERIFIED, alice, null);
 
         Team roomies = team("Downtown Roomies");
         membership(roomies, carol, TeamRole.TEAM_ADMIN);
         membership(roomies, dave, TeamRole.USER);
 
         card(roomies, "Take out the trash", "Bins go to the curb, recycling too.",
-                Rarity.COMMON, 1, 10, 5, 5, null, CardStatus.AVAILABLE, null);
+                Rarity.COMMON, 1, 10, 5, 5, null, CardStatus.AVAILABLE, null, null);
         card(roomies, "Restock kitchen supplies", "Buy paper towels, dish soap, and sponges.",
-                Rarity.RARE, 4, 30, 25, 15, null, CardStatus.CLAIMED, dave);
+                Rarity.RARE, 4, 30, 25, 15, null, CardStatus.CLAIMED, dave, null);
         card(roomies, "Organize the pantry", "Sort and label all pantry shelves.",
-                Rarity.LEGENDARY, 9, 90, 100, 50, "Master Organizer Badge", CardStatus.VERIFIED, carol);
+                Rarity.LEGENDARY, 9, 90, 100, 50, "Master Organizer Badge", CardStatus.VERIFIED, carol, null);
     }
 
     private User user(String email, String name) {
@@ -108,7 +108,7 @@ public class DevDataSeeder {
     }
 
     private void card(Team team, String title, String description, Rarity rarity, int complexity,
-            int estimatedMinutes, int xpReward, int goldReward, String itemDrop, CardStatus status, User assignee) {
+            int estimatedMinutes, int xpReward, int goldReward, String itemDrop, CardStatus status, User assignee, String imageUrl) {
         ChoreCard c = new ChoreCard();
         c.teamId = team.id;
         c.title = title;
@@ -121,6 +121,7 @@ public class DevDataSeeder {
         c.itemDrop = itemDrop;
         c.status = status;
         c.assignedUserId = assignee != null ? assignee.id : null;
+        c.imageUrl = imageUrl;
 
         Instant now = Instant.now();
         if (status == CardStatus.CLAIMED || status == CardStatus.COMPLETED || status == CardStatus.VERIFIED) {

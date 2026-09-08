@@ -57,6 +57,9 @@ public class ChoreCard extends PanacheEntityBase {
     @Column(name = "item_drop")
     public String itemDrop;
 
+    @Column(name = "image_url")
+    public String imageUrl;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

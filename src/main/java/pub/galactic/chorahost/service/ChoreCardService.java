@@ -69,6 +69,7 @@ public class ChoreCardService {
         card.xpReward = request.xpReward();
         card.goldReward = request.goldReward();
         card.itemDrop = request.itemDrop();
+        card.imageUrl = request.imageUrl();
         card.status = CardStatus.AVAILABLE;
 
         choreCardRepository.persist(card);

@@ -17,6 +17,7 @@ public record ChoreCardTemplateResponse(
         Integer xpReward,
         Integer goldReward,
         String itemDrop,
+        String imageUrl,
         Instant createdAt) {
 
     public static ChoreCardTemplateResponse from(ChoreCardTemplate template) {
@@ -31,6 +32,7 @@ public record ChoreCardTemplateResponse(
                 template.xpReward,
                 template.goldReward,
                 template.itemDrop,
+                template.imageUrl,
                 template.createdAt);
     }
 }

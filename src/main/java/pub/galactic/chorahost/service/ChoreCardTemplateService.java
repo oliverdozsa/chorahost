@@ -43,6 +43,7 @@ public class ChoreCardTemplateService {
         template.xpReward = request.xpReward();
         template.goldReward = request.goldReward();
         template.itemDrop = request.itemDrop();
+        template.imageUrl = request.imageUrl();
 
         templateRepository.persist(template);
         return template;

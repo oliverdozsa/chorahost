@@ -17,5 +17,6 @@ public record CreateChoreCardRequest(
         @NotNull Integer estimatedMinutes,
         @NotNull Integer xpReward,
         @NotNull Integer goldReward,
-        String itemDrop) {
+        String itemDrop,
+        String imageUrl) {
 }

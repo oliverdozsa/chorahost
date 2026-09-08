@@ -64,6 +64,9 @@ public class ChoreCardTemplate extends PanacheEntityBase {
     @Column(name = "item_drop")
     public String itemDrop;
 
+    @Column(name = "image_url")
+    public String imageUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;
 

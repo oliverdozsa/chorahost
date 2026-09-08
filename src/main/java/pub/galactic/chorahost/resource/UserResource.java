@@ -47,12 +47,18 @@ public class UserResource {
         return UserResponse.from(user, teamService.getMembershipsForUser(user.id));
     }
 
+    /**
+     * Looking up another user is only allowed when the requester shares at
+     * least one team with them; the response is scoped to just that shared
+     * subset of team memberships, never the target's full team list.
+     */
     @GET
     @Path("/{id}")
     public UserResponse getUser(@PathParam("id") UUID id) {
+        User requester = currentUserService.getOrCreateCurrentUser();
         User user = userRepository.findByIdOptional(id)
                 .orElseThrow(() -> ApiException.notFound("User not found: " + id));
-        return UserResponse.from(user, teamService.getMembershipsForUser(id));
+        return UserResponse.from(user, teamService.getSharedMembershipsForUser(id, requester.id));
     }
 
     @GET

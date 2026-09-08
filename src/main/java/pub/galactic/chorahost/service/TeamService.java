@@ -3,6 +3,7 @@ package pub.galactic.chorahost.service;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -102,7 +103,32 @@ public class TeamService {
      * Every team a user belongs to, for their profile view.
      */
     public List<TeamMembershipResponse> getMembershipsForUser(UUID userId) {
-        List<TeamMembership> memberships = membershipRepository.findByUser(userId);
+        return toMembershipResponses(membershipRepository.findByUser(userId));
+    }
+
+    /**
+     * The subset of a target user's team memberships that the requester also
+     * belongs to, for looking up another user's profile. Denies access
+     * entirely (rather than returning an empty list) when the two users
+     * share no team, since there is otherwise no relationship justifying
+     * exposing the target user's data at all.
+     */
+    public List<TeamMembershipResponse> getSharedMembershipsForUser(UUID targetUserId, UUID requesterUserId) {
+        Set<UUID> requesterTeamIds = membershipRepository.findByUser(requesterUserId).stream()
+                .map(m -> m.teamId)
+                .collect(Collectors.toSet());
+
+        List<TeamMembership> sharedMemberships = membershipRepository.findByUser(targetUserId).stream()
+                .filter(m -> requesterTeamIds.contains(m.teamId))
+                .toList();
+        if (sharedMemberships.isEmpty()) {
+            throw ApiException.forbidden("No shared team with this user");
+        }
+
+        return toMembershipResponses(sharedMemberships);
+    }
+
+    private List<TeamMembershipResponse> toMembershipResponses(List<TeamMembership> memberships) {
         if (memberships.isEmpty()) {
             return List.of();
         }

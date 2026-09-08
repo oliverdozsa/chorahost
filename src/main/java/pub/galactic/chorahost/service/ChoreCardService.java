@@ -13,6 +13,7 @@ import pub.galactic.chorahost.enums.TeamRole;
 import pub.galactic.chorahost.exception.ApiException;
 import pub.galactic.chorahost.repository.ChoreCardRepository;
 import pub.galactic.chorahost.service.GamificationService.LevelUpResult;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -30,12 +31,24 @@ public class ChoreCardService {
     @Inject
     GamificationService gamificationService;
 
-    public List<ChoreCard> getCardsForTeam(UUID teamId, List<CardStatus> statuses, User requester) {
+    public static final int DEFAULT_PAGE_SIZE = 20;
+    public static final int MAX_PAGE_SIZE = 100;
+
+    public PagedResult<ChoreCard> getCardsForTeam(UUID teamId, List<CardStatus> statuses, User requester,
+            int page, int size) {
         teamService.requireMembership(teamId, requester.id);
+        if (page < 0) {
+            throw ApiException.badRequest("page must be >= 0");
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw ApiException.badRequest("size must be between 1 and " + MAX_PAGE_SIZE);
+        }
+
         List<CardStatus> effectiveStatuses = (statuses == null || statuses.isEmpty())
                 ? List.of(CardStatus.AVAILABLE)
                 : statuses;
-        return choreCardRepository.findForTeamByStatuses(teamId, effectiveStatuses);
+        PanacheQuery<ChoreCard> query = choreCardRepository.findForTeamByStatuses(teamId, effectiveStatuses, page, size);
+        return new PagedResult<>(query.list(), page, size, query.count());
     }
 
     public List<ChoreCard> getHand(UUID userId) {

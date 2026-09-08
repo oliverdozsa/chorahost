@@ -9,8 +9,10 @@ import pub.galactic.chorahost.dto.AssignRoleRequest;
 import pub.galactic.chorahost.dto.ChoreCardResponse;
 import pub.galactic.chorahost.dto.ChoreCardTemplateResponse;
 import pub.galactic.chorahost.dto.CreateTeamRequest;
+import pub.galactic.chorahost.dto.PagedResponse;
 import pub.galactic.chorahost.dto.TeamMemberResponse;
 import pub.galactic.chorahost.dto.TeamResponse;
+import pub.galactic.chorahost.entity.ChoreCard;
 import pub.galactic.chorahost.entity.Team;
 import pub.galactic.chorahost.entity.User;
 import pub.galactic.chorahost.enums.CardStatus;
@@ -18,11 +20,13 @@ import pub.galactic.chorahost.exception.ApiException;
 import pub.galactic.chorahost.security.CurrentUserService;
 import pub.galactic.chorahost.service.ChoreCardService;
 import pub.galactic.chorahost.service.ChoreCardTemplateService;
+import pub.galactic.chorahost.service.PagedResult;
 import pub.galactic.chorahost.service.TeamService;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -58,12 +62,14 @@ public class TeamResource {
 
     @GET
     @Path("/{teamId}/cards")
-    public List<ChoreCardResponse> getTeamCards(@PathParam("teamId") UUID teamId,
-            @QueryParam("status") String status) {
+    public PagedResponse<ChoreCardResponse> getTeamCards(@PathParam("teamId") UUID teamId,
+            @QueryParam("status") String status,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("" + ChoreCardService.DEFAULT_PAGE_SIZE) int size) {
         User requester = currentUserService.getOrCreateCurrentUser();
         List<CardStatus> statuses = parseStatuses(status);
-        return choreCardService.getCardsForTeam(teamId, statuses, requester).stream()
-                .map(ChoreCardResponse::from).toList();
+        PagedResult<ChoreCard> result = choreCardService.getCardsForTeam(teamId, statuses, requester, page, size);
+        return PagedResponse.from(result, ChoreCardResponse::from);
     }
 
     private static List<CardStatus> parseStatuses(String status) {

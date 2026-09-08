@@ -116,7 +116,7 @@ class ChoreCardResourceTest extends AbstractResourceTest {
         given()
                 .when().get("/api/v1/teams/" + teamId + "/cards")
                 .then().statusCode(200)
-                .body("find { it.id == '" + cardId + "' }.status", is("AVAILABLE"));
+                .body("items.find { it.id == '" + cardId + "' }.status", is("AVAILABLE"));
     }
 
     @Test
@@ -322,14 +322,14 @@ class ChoreCardResourceTest extends AbstractResourceTest {
         given()
                 .when().get("/api/v1/teams/" + teamId + "/cards")
                 .then().statusCode(200)
-                .body("findAll { it.status != 'AVAILABLE' }", org.hamcrest.Matchers.empty());
+                .body("items.findAll { it.status != 'AVAILABLE' }", org.hamcrest.Matchers.empty());
 
         given()
                 .when().get("/api/v1/teams/" + teamId + "/cards?status=COMPLETED,VERIFIED")
                 .then().statusCode(200)
-                .body("find { it.id == '" + cardId + "' }.status", is("VERIFIED"))
-                .body("find { it.id == '" + bigCardId + "' }.status", is("VERIFIED"))
-                .body("findAll { it.status == 'AVAILABLE' }", org.hamcrest.Matchers.empty());
+                .body("items.find { it.id == '" + cardId + "' }.status", is("VERIFIED"))
+                .body("items.find { it.id == '" + bigCardId + "' }.status", is("VERIFIED"))
+                .body("items.findAll { it.status == 'AVAILABLE' }", org.hamcrest.Matchers.empty());
     }
 
     @Test

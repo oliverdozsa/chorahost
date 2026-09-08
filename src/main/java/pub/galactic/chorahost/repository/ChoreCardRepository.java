@@ -5,14 +5,25 @@ import java.util.UUID;
 
 import pub.galactic.chorahost.entity.ChoreCard;
 import pub.galactic.chorahost.enums.CardStatus;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class ChoreCardRepository implements PanacheRepositoryBase<ChoreCard, UUID> {
 
-    public List<ChoreCard> findForTeamByStatuses(UUID teamId, List<CardStatus> statuses) {
-        return find("teamId = ?1 and status in ?2", teamId, statuses).list();
+    /**
+     * Cards for a team, most recently "active" first. Sorts by whichever "at"
+     * timestamp is most relevant to a terminal-ish status (verified, then
+     * completed, then claimed), falling back to createdAt for cards still
+     * AVAILABLE - a single ordering that stays sensible even when statuses is
+     * a mix (e.g. CLAIMED and VERIFIED together).
+     */
+    public PanacheQuery<ChoreCard> findForTeamByStatuses(UUID teamId, List<CardStatus> statuses, int page, int size) {
+        return find("teamId = ?1 and status in ?2 "
+                + "order by coalesce(verifiedAt, completedAt, claimedAt, createdAt) desc", teamId, statuses)
+                .page(Page.of(page, size));
     }
 
     public List<ChoreCard> findHand(UUID userId) {

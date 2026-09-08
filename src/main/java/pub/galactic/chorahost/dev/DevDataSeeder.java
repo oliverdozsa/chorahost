@@ -75,6 +75,7 @@ public class DevDataSeeder {
         Team roomies = team("Downtown Roomies");
         membership(roomies, carol, TeamRole.TEAM_ADMIN);
         membership(roomies, dave, TeamRole.USER);
+        membership(roomies, bob, TeamRole.USER);
 
         card(roomies, "Take out the trash", "Bins go to the curb, recycling too.",
                 Rarity.COMMON, 1, 10, 5, 5, null, CardStatus.AVAILABLE, null, null);

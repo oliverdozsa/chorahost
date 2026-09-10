@@ -58,6 +58,7 @@ public class DevDataSeeder {
         User bob = user("bob@example.com", "Bob");
         User carol = user("carol@example.com", "Carol");
         User dave = user("dave@example.com", "Dave");
+        User emily = user("emily@example.com", "Emily");
 
         Team household = team("The Chore Chrusaders Household");
         membership(household, alice, TeamRole.TEAM_ADMIN);

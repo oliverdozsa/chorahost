@@ -18,7 +18,8 @@ public record ChoreCardTemplateResponse(
         Integer goldReward,
         String itemDrop,
         String imageUrl,
-        Instant createdAt) {
+        Instant createdAt,
+        RecurrenceDto recurrence) {
 
     public static ChoreCardTemplateResponse from(ChoreCardTemplate template) {
         return new ChoreCardTemplateResponse(
@@ -33,6 +34,7 @@ public record ChoreCardTemplateResponse(
                 template.goldReward,
                 template.itemDrop,
                 template.imageUrl,
-                template.createdAt);
+                template.createdAt,
+                RecurrenceDto.of(template.recurrenceType, template.recurrenceIntervalMinutes, template.recurrenceSchedule));
     }
 }

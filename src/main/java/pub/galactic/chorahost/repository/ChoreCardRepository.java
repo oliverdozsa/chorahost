@@ -1,5 +1,6 @@
 package pub.galactic.chorahost.repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.LockModeType;
 
 @ApplicationScoped
 public class ChoreCardRepository implements PanacheRepositoryBase<ChoreCard, UUID> {
@@ -24,6 +26,12 @@ public class ChoreCardRepository implements PanacheRepositoryBase<ChoreCard, UUI
         return find("teamId = ?1 and status in ?2 "
                 + "order by coalesce(verifiedAt, completedAt, claimedAt, createdAt) desc", teamId, statuses)
                 .page(Page.of(page, size));
+    }
+
+    /** Recurring cards due for respawn, row-locked so concurrent instances don't double-spawn. */
+    public List<ChoreCard> findDueForRespawn(Instant now) {
+        return find("recurrenceNextSpawnAt <= ?1 order by recurrenceNextSpawnAt", now)
+                .withLock(LockModeType.PESSIMISTIC_WRITE).list();
     }
 
     public List<ChoreCard> findHand(UUID userId) {

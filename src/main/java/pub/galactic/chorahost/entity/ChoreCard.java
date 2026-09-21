@@ -5,8 +5,10 @@ import java.util.UUID;
 
 import pub.galactic.chorahost.enums.CardStatus;
 import pub.galactic.chorahost.enums.Rarity;
+import pub.galactic.chorahost.enums.RecurrenceType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -59,6 +61,23 @@ public class ChoreCard extends PanacheEntityBase {
 
     @Column(name = "image_url")
     public String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recurrence_type")
+    public RecurrenceType recurrenceType;
+
+    @Column(name = "recurrence_interval_minutes")
+    public Integer recurrenceIntervalMinutes;
+
+    @Embedded
+    public ScheduleRule recurrenceSchedule;
+
+    /**
+     * When the background job should respawn this card. Set on verification for
+     * recurring cards and cleared once the respawn has happened.
+     */
+    @Column(name = "recurrence_next_spawn_at")
+    public Instant recurrenceNextSpawnAt;
 
     @NotNull
     @Enumerated(EnumType.STRING)

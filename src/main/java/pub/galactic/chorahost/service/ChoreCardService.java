@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import pub.galactic.chorahost.dto.CreateChoreCardRequest;
 import pub.galactic.chorahost.entity.ChoreCard;
+import pub.galactic.chorahost.entity.ScheduleRule;
 import pub.galactic.chorahost.entity.TeamMembership;
 import pub.galactic.chorahost.entity.User;
 import pub.galactic.chorahost.enums.CardStatus;
@@ -27,6 +28,9 @@ public class ChoreCardService {
 
     @Inject
     TeamService teamService;
+
+    @Inject
+    RecurrenceService recurrenceService;
 
     @Inject
     GamificationService gamificationService;
@@ -70,6 +74,12 @@ public class ChoreCardService {
         card.goldReward = request.goldReward();
         card.itemDrop = request.itemDrop();
         card.imageUrl = request.imageUrl();
+        if (request.recurrence() != null) {
+            request.recurrence().validate();
+            card.recurrenceType = request.recurrence().type();
+            card.recurrenceIntervalMinutes = request.recurrence().intervalMinutes();
+            card.recurrenceSchedule = ScheduleRule.from(request.recurrence().schedule());
+        }
         card.status = CardStatus.AVAILABLE;
 
         choreCardRepository.persist(card);
@@ -120,6 +130,7 @@ public class ChoreCardService {
 
         card.status = CardStatus.VERIFIED;
         card.verifiedAt = Instant.now();
+        card.recurrenceNextSpawnAt = recurrenceService.nextSpawnAt(card, card.verifiedAt);
 
         TeamMembership assigneeMembership = teamService.findMembership(card.teamId, card.assignedUserId)
                 .orElseThrow(() -> ApiException.notFound("Assigned user is not a member of this team"));

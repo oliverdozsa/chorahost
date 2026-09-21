@@ -4,8 +4,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 import pub.galactic.chorahost.enums.Rarity;
+import pub.galactic.chorahost.enums.RecurrenceType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -66,6 +68,16 @@ public class ChoreCardTemplate extends PanacheEntityBase {
 
     @Column(name = "image_url")
     public String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recurrence_type")
+    public RecurrenceType recurrenceType;
+
+    @Column(name = "recurrence_interval_minutes")
+    public Integer recurrenceIntervalMinutes;
+
+    @Embedded
+    public ScheduleRule recurrenceSchedule;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;

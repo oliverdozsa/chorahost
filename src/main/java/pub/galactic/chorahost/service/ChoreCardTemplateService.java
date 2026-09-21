@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import pub.galactic.chorahost.dto.CreateChoreCardTemplateRequest;
 import pub.galactic.chorahost.entity.ChoreCardTemplate;
+import pub.galactic.chorahost.entity.ScheduleRule;
 import pub.galactic.chorahost.entity.User;
 import pub.galactic.chorahost.repository.ChoreCardTemplateRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -39,6 +40,12 @@ public class ChoreCardTemplateService {
         template.goldReward = request.goldReward();
         template.itemDrop = request.itemDrop();
         template.imageUrl = request.imageUrl();
+        if (request.recurrence() != null) {
+            request.recurrence().validate();
+            template.recurrenceType = request.recurrence().type();
+            template.recurrenceIntervalMinutes = request.recurrence().intervalMinutes();
+            template.recurrenceSchedule = ScheduleRule.from(request.recurrence().schedule());
+        }
 
         templateRepository.persist(template);
         return template;

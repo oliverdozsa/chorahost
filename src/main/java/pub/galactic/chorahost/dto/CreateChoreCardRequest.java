@@ -3,6 +3,7 @@ package pub.galactic.chorahost.dto;
 import java.util.UUID;
 
 import pub.galactic.chorahost.enums.Rarity;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -18,5 +19,6 @@ public record CreateChoreCardRequest(
         @NotNull Integer xpReward,
         @NotNull Integer goldReward,
         String itemDrop,
-        String imageUrl) {
+        String imageUrl,
+        @Valid RecurrenceDto recurrence) {
 }

@@ -438,6 +438,95 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 .then().statusCode(409);
     }
 
+    @Test
+    @Order(23)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void nonAdminCannotEditCard() {
+        given()
+                .contentType("application/json")
+                .body(cardPayload(999, 999))
+                .when().put("/api/v1/cards/" + completedCardId)
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(24)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void adminEditsAvailableCard() {
+        String editedTitle = given()
+                .contentType("application/json")
+                .body(editedCardPayload("Wash the dishes (updated)", 20, 2))
+                .when().put("/api/v1/cards/" + bigCardId)
+                .then().statusCode(200)
+                .body("title", is("Wash the dishes (updated)"))
+                .body("xpReward", is(20))
+                .body("goldReward", is(2))
+                .extract().path("title");
+
+        org.assertj.core.api.Assertions.assertThat(editedTitle).isEqualTo("Wash the dishes (updated)");
+    }
+
+    @Test
+    @Order(25)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void adminEditsVerifiedCard() {
+        // cardId is VERIFIED at this point (order 11); editing must still be
+        // allowed regardless of status.
+        given()
+                .contentType("application/json")
+                .body(editedCardPayload("Wash the dishes (relabeled)", 30, 3))
+                .when().put("/api/v1/cards/" + cardId)
+                .then().statusCode(200)
+                .body("title", is("Wash the dishes (relabeled)"))
+                .body("status", is("VERIFIED"))
+                .body("xpReward", is(30))
+                .body("goldReward", is(3));
+    }
+
+    @Test
+    @Order(26)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void editingAMissingCardReturns404() {
+        String missingCardId = "00000000-0000-0000-0000-000000000000";
+        given()
+                .contentType("application/json")
+                .body(editedCardPayload("Nope", 1, 1))
+                .when().put("/api/v1/cards/" + missingCardId)
+                .then().statusCode(404);
+    }
+
+    private static String editedCardPayload(String title, int xpReward, int goldReward) {
+        return "{"
+                + "\"title\":\"" + title + "\","
+                + "\"description\":\"Every last plate\","
+                + "\"rarity\":\"COMMON\","
+                + "\"complexity\":3,"
+                + "\"estimatedMinutes\":15,"
+                + "\"xpReward\":" + xpReward + ","
+                + "\"goldReward\":" + goldReward
+                + "}";
+    }
+
     private static String cardPayload(int xpReward, int goldReward) {
         return "{"
                 + "\"teamId\":\"" + teamId + "\","

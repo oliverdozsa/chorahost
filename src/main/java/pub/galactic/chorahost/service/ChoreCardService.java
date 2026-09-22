@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import pub.galactic.chorahost.dto.CreateChoreCardRequest;
+import pub.galactic.chorahost.dto.UpdateChoreCardRequest;
 import pub.galactic.chorahost.entity.ChoreCard;
 import pub.galactic.chorahost.entity.ScheduleRule;
 import pub.galactic.chorahost.entity.TeamMembership;
@@ -83,6 +84,34 @@ public class ChoreCardService {
         card.status = CardStatus.AVAILABLE;
 
         choreCardRepository.persist(card);
+        return card;
+    }
+
+    @Transactional
+    public ChoreCard updateCard(UUID cardId, UpdateChoreCardRequest request, User requester) {
+        ChoreCard card = requireCard(cardId);
+        teamService.requireAdminOrTeamAdmin(card.teamId, requester);
+
+        card.title = request.title();
+        card.description = request.description();
+        card.rarity = request.rarity();
+        card.complexity = request.complexity();
+        card.estimatedMinutes = request.estimatedMinutes();
+        card.xpReward = request.xpReward();
+        card.goldReward = request.goldReward();
+        card.itemDrop = request.itemDrop();
+        card.imageUrl = request.imageUrl();
+        if (request.recurrence() != null) {
+            request.recurrence().validate();
+            card.recurrenceType = request.recurrence().type();
+            card.recurrenceIntervalMinutes = request.recurrence().intervalMinutes();
+            card.recurrenceSchedule = ScheduleRule.from(request.recurrence().schedule());
+        } else {
+            card.recurrenceType = null;
+            card.recurrenceIntervalMinutes = null;
+            card.recurrenceSchedule = null;
+        }
+
         return card;
     }
 

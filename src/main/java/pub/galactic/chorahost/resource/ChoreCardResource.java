@@ -6,6 +6,7 @@ import java.util.UUID;
 import pub.galactic.chorahost.dto.CardVerificationResponse;
 import pub.galactic.chorahost.dto.ChoreCardResponse;
 import pub.galactic.chorahost.dto.CreateChoreCardRequest;
+import pub.galactic.chorahost.dto.UpdateChoreCardRequest;
 import pub.galactic.chorahost.entity.ChoreCard;
 import pub.galactic.chorahost.entity.User;
 import pub.galactic.chorahost.security.CurrentUserService;
@@ -16,6 +17,7 @@ import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -41,6 +43,14 @@ public class ChoreCardResource {
         return Response.created(URI.create("/api/v1/cards/" + card.id))
                 .entity(ChoreCardResponse.from(card))
                 .build();
+    }
+
+    @PUT
+    @Path("/{cardId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ChoreCardResponse updateCard(@PathParam("cardId") UUID cardId, @Valid UpdateChoreCardRequest request) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return ChoreCardResponse.from(choreCardService.updateCard(cardId, request, requester));
     }
 
     @POST

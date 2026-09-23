@@ -515,6 +515,56 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 .then().statusCode(404);
     }
 
+    @Test
+    @Order(27)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void nonAdminCannotDeleteCard() {
+        given()
+                .when().delete("/api/v1/cards/" + completedCardId)
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(28)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void adminDeletesVerifiedCard() {
+        // cardId is VERIFIED at this point (order 11); deletion must be
+        // allowed regardless of status.
+        given()
+                .when().delete("/api/v1/cards/" + cardId)
+                .then().statusCode(204);
+
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/cards?status=VERIFIED,COMPLETED,CLAIMED,AVAILABLE")
+                .then().statusCode(200)
+                .body("items.find { it.id == '" + cardId + "' }", org.hamcrest.Matchers.nullValue());
+    }
+
+    @Test
+    @Order(29)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void deletingAMissingCardReturns404() {
+        String missingCardId = "00000000-0000-0000-0000-000000000000";
+        given()
+                .when().delete("/api/v1/cards/" + missingCardId)
+                .then().statusCode(404);
+    }
+
     private static String editedCardPayload(String title, int xpReward, int goldReward) {
         return "{"
                 + "\"title\":\"" + title + "\","

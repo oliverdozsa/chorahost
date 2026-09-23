@@ -159,6 +159,54 @@ class ChoreCardTemplateResourceTest extends AbstractResourceTest {
                 .then().statusCode(404);
     }
 
+    @Test
+    @Order(7)
+    @TestSecurity(user = OUTSIDER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OUTSIDER_SUB),
+            @Claim(key = "email", value = OUTSIDER_EMAIL),
+            @Claim(key = "name", value = "Outsider")
+    })
+    void nonMemberCannotDeleteTemplate() {
+        given()
+                .when().delete("/api/v1/card-templates/" + templateId)
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(8)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Template Admin")
+    })
+    void adminDeletesTemplate() {
+        given()
+                .when().delete("/api/v1/card-templates/" + templateId)
+                .then().statusCode(204);
+
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/card-templates")
+                .then().statusCode(200)
+                .body("find { it.id == '" + templateId + "' }", org.hamcrest.Matchers.nullValue());
+    }
+
+    @Test
+    @Order(9)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Template Admin")
+    })
+    void deletingAMissingTemplateReturns404() {
+        String missingTemplateId = "00000000-0000-0000-0000-000000000000";
+        given()
+                .when().delete("/api/v1/card-templates/" + missingTemplateId)
+                .then().statusCode(404);
+    }
+
     private static String editedTemplatePayload(String title, int xpReward, int goldReward) {
         return "{"
                 + "\"title\":\"" + title + "\","

@@ -16,6 +16,7 @@ import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -51,6 +52,14 @@ public class ChoreCardResource {
     public ChoreCardResponse updateCard(@PathParam("cardId") UUID cardId, @Valid UpdateChoreCardRequest request) {
         User requester = currentUserService.getOrCreateCurrentUser();
         return ChoreCardResponse.from(choreCardService.updateCard(cardId, request, requester));
+    }
+
+    @DELETE
+    @Path("/{cardId}")
+    public Response deleteCard(@PathParam("cardId") UUID cardId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        choreCardService.deleteCard(cardId, requester);
+        return Response.noContent().build();
     }
 
     @POST

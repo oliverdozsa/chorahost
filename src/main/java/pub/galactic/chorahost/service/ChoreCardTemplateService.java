@@ -81,4 +81,13 @@ public class ChoreCardTemplateService {
 
         return template;
     }
+
+    @Transactional
+    public void deleteTemplate(UUID templateId, User requester) {
+        ChoreCardTemplate template = templateRepository.findByIdOptional(templateId)
+                .orElseThrow(() -> ApiException.notFound("Template not found: " + templateId));
+        teamService.requireAdminOrTeamAdmin(template.teamId, requester);
+
+        templateRepository.delete(template);
+    }
 }

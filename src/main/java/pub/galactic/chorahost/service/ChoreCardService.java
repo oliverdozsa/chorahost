@@ -185,6 +185,14 @@ public class ChoreCardService {
         return card;
     }
 
+    @Transactional
+    public void deleteCard(UUID cardId, User requester) {
+        ChoreCard card = requireCard(cardId);
+        teamService.requireAdminOrTeamAdmin(card.teamId, requester);
+
+        choreCardRepository.delete(card);
+    }
+
     private ChoreCard requireCard(UUID cardId) {
         return choreCardRepository.findByIdOptional(cardId)
                 .orElseThrow(() -> ApiException.notFound("Card not found: " + cardId));

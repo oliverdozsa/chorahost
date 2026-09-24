@@ -34,6 +34,12 @@ public class ChoreCardRepository implements PanacheRepositoryBase<ChoreCard, UUI
                 .withLock(LockModeType.PESSIMISTIC_WRITE).list();
     }
 
+    /** Claimed cards past their due date, row-locked so concurrent instances don't double-process. */
+    public List<ChoreCard> findExpiredClaims(Instant now) {
+        return find("status = ?1 and dueAt <= ?2", CardStatus.CLAIMED, now)
+                .withLock(LockModeType.PESSIMISTIC_WRITE).list();
+    }
+
     public List<ChoreCard> findHand(UUID userId) {
         return find("assignedUserId = ?1 and status in (?2, ?3)",
                 userId, CardStatus.CLAIMED, CardStatus.COMPLETED).list();

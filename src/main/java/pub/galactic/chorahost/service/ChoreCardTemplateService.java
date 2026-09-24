@@ -42,6 +42,7 @@ public class ChoreCardTemplateService {
         template.goldReward = request.goldReward();
         template.itemDrop = request.itemDrop();
         template.imageUrl = request.imageUrl();
+        template.dueDateIntervalHours = request.dueDateIntervalHours();
         if (request.recurrence() != null) {
             request.recurrence().validate();
             template.recurrenceType = request.recurrence().type();
@@ -68,6 +69,7 @@ public class ChoreCardTemplateService {
         template.goldReward = request.goldReward();
         template.itemDrop = request.itemDrop();
         template.imageUrl = request.imageUrl();
+        template.dueDateIntervalHours = request.dueDateIntervalHours();
         if (request.recurrence() != null) {
             request.recurrence().validate();
             template.recurrenceType = request.recurrence().type();

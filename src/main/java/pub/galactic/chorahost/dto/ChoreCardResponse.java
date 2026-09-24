@@ -27,6 +27,8 @@ public record ChoreCardResponse(
         Instant completedAt,
         Instant verifiedAt,
         Instant rewardAcknowledgedAt,
+        Integer dueDateIntervalHours,
+        Instant dueAt,
         RecurrenceDto recurrence) {
 
     public static ChoreCardResponse from(ChoreCard card) {
@@ -50,6 +52,8 @@ public record ChoreCardResponse(
                 card.completedAt,
                 card.verifiedAt,
                 card.rewardAcknowledgedAt,
+                card.dueDateIntervalHours,
+                card.dueAt,
                 RecurrenceDto.of(card.recurrenceType, card.recurrenceIntervalMinutes, card.recurrenceSchedule));
     }
 }

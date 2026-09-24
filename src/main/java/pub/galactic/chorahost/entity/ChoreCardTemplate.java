@@ -69,6 +69,13 @@ public class ChoreCardTemplate extends PanacheEntityBase {
     @Column(name = "image_url")
     public String imageUrl;
 
+    /**
+     * Hours the assignee has to complete a card instantiated from this
+     * template, once claimed. Null means no due date.
+     */
+    @Column(name = "due_date_interval_hours")
+    public Integer dueDateIntervalHours;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "recurrence_type")
     public RecurrenceType recurrenceType;

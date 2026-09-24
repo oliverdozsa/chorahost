@@ -207,6 +207,35 @@ class ChoreCardTemplateResourceTest extends AbstractResourceTest {
                 .then().statusCode(404);
     }
 
+    @Test
+    @Order(10)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Template Admin")
+    })
+    void adminCreatesTemplateWithDueDateInterval() {
+        String dueDateTemplateId = given()
+                .contentType("application/json")
+                .body("{"
+                        + "\"teamId\":\"" + teamId + "\","
+                        + "\"title\":\"Water the garden\","
+                        + "\"description\":\"Before it wilts\","
+                        + "\"rarity\":\"COMMON\","
+                        + "\"complexity\":2,"
+                        + "\"estimatedMinutes\":10,"
+                        + "\"xpReward\":5,"
+                        + "\"goldReward\":1,"
+                        + "\"dueDateIntervalHours\":6"
+                        + "}")
+                .when().post("/api/v1/card-templates")
+                .then().statusCode(201)
+                .body("dueDateIntervalHours", is(6))
+                .extract().path("id");
+        assertNotBlank(dueDateTemplateId);
+    }
+
     private static String editedTemplatePayload(String title, int xpReward, int goldReward) {
         return "{"
                 + "\"title\":\"" + title + "\","

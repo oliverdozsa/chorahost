@@ -87,6 +87,21 @@ public class ChoreCard extends PanacheEntityBase {
     @Column(name = "assigned_user_id")
     public UUID assignedUserId;
 
+    /**
+     * Hours the assignee has to complete the card after claiming it. Null
+     * means the card has no due date.
+     */
+    @Column(name = "due_date_interval_hours")
+    public Integer dueDateIntervalHours;
+
+    /**
+     * When the card must be completed by. Set from {@link #dueDateIntervalHours}
+     * at claim time and cleared when the card is unclaimed (completed, or
+     * expired back to AVAILABLE).
+     */
+    @Column(name = "due_at")
+    public Instant dueAt;
+
     @NotNull
     @Column(name = "team_id", nullable = false)
     public UUID teamId;

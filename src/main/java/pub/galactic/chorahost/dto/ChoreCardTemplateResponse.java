@@ -19,6 +19,7 @@ public record ChoreCardTemplateResponse(
         String itemDrop,
         String imageUrl,
         Instant createdAt,
+        Integer dueDateIntervalHours,
         RecurrenceDto recurrence) {
 
     public static ChoreCardTemplateResponse from(ChoreCardTemplate template) {
@@ -35,6 +36,7 @@ public record ChoreCardTemplateResponse(
                 template.itemDrop,
                 template.imageUrl,
                 template.createdAt,
+                template.dueDateIntervalHours,
                 RecurrenceDto.of(template.recurrenceType, template.recurrenceIntervalMinutes, template.recurrenceSchedule));
     }
 }

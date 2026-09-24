@@ -1,5 +1,6 @@
 package pub.galactic.chorahost.service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -75,6 +76,7 @@ public class ChoreCardService {
         card.goldReward = request.goldReward();
         card.itemDrop = request.itemDrop();
         card.imageUrl = request.imageUrl();
+        card.dueDateIntervalHours = request.dueDateIntervalHours();
         if (request.recurrence() != null) {
             request.recurrence().validate();
             card.recurrenceType = request.recurrence().type();
@@ -101,6 +103,7 @@ public class ChoreCardService {
         card.goldReward = request.goldReward();
         card.itemDrop = request.itemDrop();
         card.imageUrl = request.imageUrl();
+        card.dueDateIntervalHours = request.dueDateIntervalHours();
         if (request.recurrence() != null) {
             request.recurrence().validate();
             card.recurrenceType = request.recurrence().type();
@@ -126,6 +129,9 @@ public class ChoreCardService {
         card.status = CardStatus.CLAIMED;
         card.assignedUserId = requester.id;
         card.claimedAt = Instant.now();
+        card.dueAt = card.dueDateIntervalHours != null
+                ? card.claimedAt.plus(Duration.ofHours(card.dueDateIntervalHours))
+                : null;
         return card;
     }
 
@@ -141,6 +147,7 @@ public class ChoreCardService {
 
         card.status = CardStatus.COMPLETED;
         card.completedAt = Instant.now();
+        card.dueAt = null;
         return card;
     }
 

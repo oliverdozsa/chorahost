@@ -3,6 +3,7 @@ package pub.galactic.chorahost.resource;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
@@ -31,6 +32,7 @@ class ChoreCardResourceTest extends AbstractResourceTest {
     private static String cardId;
     private static String bigCardId;
     private static String completedCardId;
+    private static String dueDateCardId;
 
     @Test
     @Order(1)
@@ -565,6 +567,70 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 .then().statusCode(404);
     }
 
+    @Test
+    @Order(30)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void adminCreatesCardWithDueDateInterval() {
+        dueDateCardId = given()
+                .contentType("application/json")
+                .body(cardPayloadWithDueDateInterval(3))
+                .when().post("/api/v1/cards")
+                .then().statusCode(201)
+                .body("dueDateIntervalHours", is(3))
+                .body("dueAt", nullValue())
+                .extract().path("id");
+    }
+
+    @Test
+    @Order(31)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void claimingCardWithDueDateIntervalSetsDueAt() {
+        String claimedAt = given()
+                .when().post("/api/v1/cards/" + dueDateCardId + "/claim")
+                .then().statusCode(200)
+                .body("status", is("CLAIMED"))
+                .body("dueAt", notNullValue())
+                .extract().path("claimedAt");
+        String dueAt = given()
+                .when().get("/api/v1/users/" + playerId + "/hand")
+                .then().statusCode(200)
+                .extract().path("find { it.id == '" + dueDateCardId + "' }.dueAt");
+
+        // Postgres round-trips at microsecond precision (vs. Java's nanosecond
+        // Instant.now()), so compare within a small tolerance rather than
+        // exact equality.
+        java.time.Duration gap = java.time.Duration.between(
+                java.time.Instant.parse(claimedAt), java.time.Instant.parse(dueAt));
+        org.assertj.core.api.Assertions.assertThat(gap.minus(java.time.Duration.ofHours(3)).abs())
+                .isLessThan(java.time.Duration.ofMillis(1));
+    }
+
+    @Test
+    @Order(32)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void completingCardClearsDueAt() {
+        given()
+                .when().post("/api/v1/cards/" + dueDateCardId + "/complete")
+                .then().statusCode(200)
+                .body("status", is("COMPLETED"))
+                .body("dueAt", nullValue());
+    }
+
     private static String editedCardPayload(String title, int xpReward, int goldReward) {
         return "{"
                 + "\"title\":\"" + title + "\","
@@ -587,6 +653,20 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 + "\"estimatedMinutes\":15,"
                 + "\"xpReward\":" + xpReward + ","
                 + "\"goldReward\":" + goldReward
+                + "}";
+    }
+
+    private static String cardPayloadWithDueDateInterval(int dueDateIntervalHours) {
+        return "{"
+                + "\"teamId\":\"" + teamId + "\","
+                + "\"title\":\"Water the garden\","
+                + "\"description\":\"Before it wilts\","
+                + "\"rarity\":\"COMMON\","
+                + "\"complexity\":2,"
+                + "\"estimatedMinutes\":10,"
+                + "\"xpReward\":5,"
+                + "\"goldReward\":1,"
+                + "\"dueDateIntervalHours\":" + dueDateIntervalHours
                 + "}";
     }
 }

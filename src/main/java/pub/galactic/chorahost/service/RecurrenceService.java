@@ -67,6 +67,7 @@ public class RecurrenceService {
         fresh.goldReward = source.goldReward;
         fresh.itemDrop = source.itemDrop;
         fresh.imageUrl = source.imageUrl;
+        fresh.dueDateIntervalHours = source.dueDateIntervalHours;
         fresh.recurrenceType = source.recurrenceType;
         fresh.recurrenceIntervalMinutes = source.recurrenceIntervalMinutes;
         fresh.recurrenceSchedule = ScheduleRule.copyOf(source.recurrenceSchedule);

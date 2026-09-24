@@ -20,5 +20,6 @@ public record CreateChoreCardRequest(
         @NotNull Integer goldReward,
         String itemDrop,
         String imageUrl,
+        @Min(1) Integer dueDateIntervalHours,
         @Valid RecurrenceDto recurrence) {
 }

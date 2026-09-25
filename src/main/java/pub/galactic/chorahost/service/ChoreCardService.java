@@ -136,6 +136,23 @@ public class ChoreCardService {
     }
 
     @Transactional
+    public ChoreCard unclaimCard(UUID cardId, User requester) {
+        ChoreCard card = requireCard(cardId);
+        if (card.status != CardStatus.CLAIMED) {
+            throw ApiException.conflict("Card must be CLAIMED to be given back: " + card.status);
+        }
+        if (!requester.id.equals(card.assignedUserId)) {
+            throw new ApiException(Response.Status.FORBIDDEN, "Only the assignee can give this card back");
+        }
+
+        card.status = CardStatus.AVAILABLE;
+        card.assignedUserId = null;
+        card.claimedAt = null;
+        card.dueAt = null;
+        return card;
+    }
+
+    @Transactional
     public ChoreCard completeCard(UUID cardId, User requester) {
         ChoreCard card = requireCard(cardId);
         if (card.status != CardStatus.CLAIMED) {

@@ -70,6 +70,13 @@ public class ChoreCardResource {
     }
 
     @POST
+    @Path("/{cardId}/unclaim")
+    public ChoreCardResponse unclaimCard(@PathParam("cardId") UUID cardId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return ChoreCardResponse.from(choreCardService.unclaimCard(cardId, requester));
+    }
+
+    @POST
     @Path("/{cardId}/complete")
     public ChoreCardResponse completeCard(@PathParam("cardId") UUID cardId) {
         User requester = currentUserService.getOrCreateCurrentUser();

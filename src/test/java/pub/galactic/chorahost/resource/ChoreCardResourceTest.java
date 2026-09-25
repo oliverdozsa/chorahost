@@ -33,6 +33,7 @@ class ChoreCardResourceTest extends AbstractResourceTest {
     private static String bigCardId;
     private static String completedCardId;
     private static String dueDateCardId;
+    private static String unclaimCardId;
 
     @Test
     @Order(1)
@@ -629,6 +630,104 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 .then().statusCode(200)
                 .body("status", is("COMPLETED"))
                 .body("dueAt", nullValue());
+    }
+
+    @Test
+    @Order(33)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void adminCreatesCardForUnclaimTest() {
+        unclaimCardId = given()
+                .contentType("application/json")
+                .body(cardPayload(50, 5))
+                .when().post("/api/v1/cards")
+                .then().statusCode(201)
+                .extract().path("id");
+    }
+
+    @Test
+    @Order(34)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void unclaimingAnAvailableCardConflicts() {
+        given()
+                .when().post("/api/v1/cards/" + unclaimCardId + "/unclaim")
+                .then().statusCode(409);
+    }
+
+    @Test
+    @Order(35)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void playerClaimsCardForUnclaimTest() {
+        given()
+                .when().post("/api/v1/cards/" + unclaimCardId + "/claim")
+                .then().statusCode(200)
+                .body("status", is("CLAIMED"))
+                .body("assignedUserId", is(playerId));
+    }
+
+    @Test
+    @Order(36)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void onlyTheAssigneeCanUnclaimTheCard() {
+        given()
+                .when().post("/api/v1/cards/" + unclaimCardId + "/unclaim")
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(37)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void assigneeUnclaimsCard() {
+        given()
+                .when().post("/api/v1/cards/" + unclaimCardId + "/unclaim")
+                .then().statusCode(200)
+                .body("status", is("AVAILABLE"))
+                .body("assignedUserId", nullValue())
+                .body("claimedAt", nullValue())
+                .body("dueAt", nullValue());
+
+        given()
+                .when().get("/api/v1/users/" + playerId + "/hand")
+                .then().statusCode(200)
+                .body("find { it.id == '" + unclaimCardId + "' }", nullValue());
+    }
+
+    @Test
+    @Order(38)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void unclaimingAnAlreadyAvailableCardConflicts() {
+        given()
+                .when().post("/api/v1/cards/" + unclaimCardId + "/unclaim")
+                .then().statusCode(409);
     }
 
     private static String editedCardPayload(String title, int xpReward, int goldReward) {

@@ -10,6 +10,7 @@ import pub.galactic.chorahost.dto.ChoreCardResponse;
 import pub.galactic.chorahost.dto.ChoreCardTemplateResponse;
 import pub.galactic.chorahost.dto.CreateTeamRequest;
 import pub.galactic.chorahost.dto.PagedResponse;
+import pub.galactic.chorahost.dto.SetGoldRequest;
 import pub.galactic.chorahost.dto.TeamMemberResponse;
 import pub.galactic.chorahost.dto.TeamResponse;
 import pub.galactic.chorahost.entity.ChoreCard;
@@ -29,6 +30,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -109,5 +111,13 @@ public class TeamResource {
     public TeamMemberResponse assignRole(@PathParam("teamId") UUID teamId, @Valid AssignRoleRequest request) {
         User requester = currentUserService.getOrCreateCurrentUser();
         return teamService.assignRole(teamId, requester, request.userId(), request.role());
+    }
+
+    @PUT
+    @Path("/{teamId}/members/{userId}/gold")
+    public TeamMemberResponse setMemberGold(@PathParam("teamId") UUID teamId, @PathParam("userId") UUID userId,
+            @Valid SetGoldRequest request) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return teamService.setGold(teamId, requester, userId, request.gold());
     }
 }

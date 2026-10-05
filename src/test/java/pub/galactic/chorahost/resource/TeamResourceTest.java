@@ -30,6 +30,7 @@ class TeamResourceTest extends AbstractResourceTest {
     private static String teamId;
     private static String secondTeamId;
     private static String memberId;
+    private static String ownerId;
 
     @Test
     @Order(1)
@@ -48,10 +49,11 @@ class TeamResourceTest extends AbstractResourceTest {
                 .body("name", is("The Chore Crusaders"))
                 .extract().path("id");
 
-        given()
+        ownerId = given()
                 .when().get("/api/v1/users/me")
                 .then().statusCode(200)
-                .body("teams.find { it.teamId == '" + teamId + "' }.role", is("TEAM_ADMIN"));
+                .body("teams.find { it.teamId == '" + teamId + "' }.role", is("TEAM_ADMIN"))
+                .extract().path("id");
     }
 
     @Test
@@ -187,5 +189,103 @@ class TeamResourceTest extends AbstractResourceTest {
                 .body("teams", hasSize(2))
                 .body("teams.find { it.teamId == '" + teamId + "' }.role", is("ADMIN"))
                 .body("teams.find { it.teamId == '" + secondTeamId + "' }.role", is("TEAM_ADMIN"));
+    }
+
+    @Test
+    @Order(9)
+    @TestSecurity(user = OWNER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OWNER_SUB),
+            @Claim(key = "email", value = OWNER_EMAIL),
+            @Claim(key = "name", value = "Team Owner")
+    })
+    void teamAdminSetsMemberGold() {
+        given()
+                .contentType("application/json")
+                .body("{\"gold\":150}")
+                .when().put("/api/v1/teams/" + teamId + "/members/" + memberId + "/gold")
+                .then().statusCode(200)
+                .body("gold", is(150));
+    }
+
+    @Test
+    @Order(10)
+    @TestSecurity(user = MEMBER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = MEMBER_SUB),
+            @Claim(key = "email", value = MEMBER_EMAIL),
+            @Claim(key = "name", value = "Team Member")
+    })
+    void adminResetsTeamAdminGoldToZero() {
+        given()
+                .contentType("application/json")
+                .body("{\"gold\":0}")
+                .when().put("/api/v1/teams/" + teamId + "/members/" + ownerId + "/gold")
+                .then().statusCode(200)
+                .body("gold", is(0));
+    }
+
+    @Test
+    @Order(11)
+    @TestSecurity(user = OWNER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OWNER_SUB),
+            @Claim(key = "email", value = OWNER_EMAIL),
+            @Claim(key = "name", value = "Team Owner")
+    })
+    void negativeGoldIsRejected() {
+        given()
+                .contentType("application/json")
+                .body("{\"gold\":-1}")
+                .when().put("/api/v1/teams/" + teamId + "/members/" + memberId + "/gold")
+                .then().statusCode(400);
+    }
+
+    @Test
+    @Order(12)
+    @TestSecurity(user = OWNER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OWNER_SUB),
+            @Claim(key = "email", value = OWNER_EMAIL),
+            @Claim(key = "name", value = "Team Owner")
+    })
+    void settingGoldForNonMemberIsRejected() {
+        given()
+                .contentType("application/json")
+                .body("{\"gold\":5}")
+                .when().put("/api/v1/teams/" + secondTeamId + "/members/" + memberId + "/gold")
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(13)
+    @TestSecurity(user = OWNER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OWNER_SUB),
+            @Claim(key = "email", value = OWNER_EMAIL),
+            @Claim(key = "name", value = "Team Owner")
+    })
+    void demoteMemberToUser() {
+        given()
+                .contentType("application/json")
+                .body("{\"userId\":\"" + memberId + "\",\"role\":\"USER\"}")
+                .when().post("/api/v1/teams/" + teamId + "/role")
+                .then().statusCode(200);
+    }
+
+    @Test
+    @Order(14)
+    @TestSecurity(user = MEMBER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = MEMBER_SUB),
+            @Claim(key = "email", value = MEMBER_EMAIL),
+            @Claim(key = "name", value = "Team Member")
+    })
+    void plainUserCannotSetGold() {
+        given()
+                .contentType("application/json")
+                .body("{\"gold\":1}")
+                .when().put("/api/v1/teams/" + teamId + "/members/" + memberId + "/gold")
+                .then().statusCode(403);
     }
 }

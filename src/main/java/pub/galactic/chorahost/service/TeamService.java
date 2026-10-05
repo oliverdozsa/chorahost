@@ -66,6 +66,19 @@ public class TeamService {
     }
 
     @Transactional
+    public TeamMemberResponse setGold(UUID teamId, User requester, UUID targetUserId, int gold) {
+        requireAdminOrTeamAdmin(teamId, requester);
+
+        TeamMembership targetMembership = membershipRepository.findByUserAndTeam(targetUserId, teamId)
+                .orElseThrow(() -> ApiException.badRequest("User is not a member of this team"));
+        targetMembership.gold = gold;
+
+        User target = userRepository.findByIdOptional(targetUserId)
+                .orElseThrow(() -> ApiException.notFound("User not found: " + targetUserId));
+        return toMemberResponse(target, targetMembership);
+    }
+
+    @Transactional
     public Team joinTeamByEmail(UUID teamId, String email) {
         Team team = teamRepository.findByIdOptional(teamId)
                 .orElseThrow(() -> ApiException.notFound("Team not found: " + teamId));

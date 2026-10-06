@@ -56,6 +56,10 @@ public class TeamService {
             throw ApiException.badRequest("TEAM_ADMIN cannot be assigned through this endpoint");
         }
 
+        if (targetUserId.equals(requester.id)) {
+            throw ApiException.badRequest("You cannot change your own role");
+        }
+
         TeamMembership targetMembership = membershipRepository.findByUserAndTeam(targetUserId, teamId)
                 .orElseThrow(() -> ApiException.badRequest("User is not a member of this team"));
         targetMembership.role = role;

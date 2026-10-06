@@ -142,6 +142,29 @@ class TeamResourceTest extends AbstractResourceTest {
     }
 
     @Test
+    @Order(5)
+    @TestSecurity(user = OWNER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OWNER_SUB),
+            @Claim(key = "email", value = OWNER_EMAIL),
+            @Claim(key = "name", value = "Team Owner")
+    })
+    void teamAdminCannotChangeOwnRole() {
+        for (String role : new String[] { "ADMIN", "USER" }) {
+            given()
+                    .contentType("application/json")
+                    .body("{\"userId\":\"" + ownerId + "\",\"role\":\"" + role + "\"}")
+                    .when().post("/api/v1/teams/" + teamId + "/role")
+                    .then().statusCode(400);
+        }
+
+        given()
+                .when().get("/api/v1/users/me")
+                .then().statusCode(200)
+                .body("teams.find { it.teamId == '" + teamId + "' }.role", is("TEAM_ADMIN"));
+    }
+
+    @Test
     @Order(6)
     @TestSecurity(user = OWNER_SUB)
     @OidcSecurity(claims = {

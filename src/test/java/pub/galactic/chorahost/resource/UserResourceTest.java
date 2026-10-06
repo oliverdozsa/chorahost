@@ -30,6 +30,7 @@ class UserResourceTest extends AbstractResourceTest {
     private static final String SHARED_SUB = "user-lookup-shared-sub";
     private static final String SHARED_EMAIL = "lookup-shared@chorahost.test";
 
+    private static String sharedInviteCode;
     private static String sharedTeamId;
     private static String otherTeamId;
     private static String ownerId;
@@ -56,6 +57,13 @@ class UserResourceTest extends AbstractResourceTest {
                 .then().statusCode(201)
                 .extract().path("id");
 
+        sharedInviteCode = given()
+                .contentType("application/json")
+                .body("{\"email\":\"" + SHARED_EMAIL + "\"}")
+                .when().post("/api/v1/teams/" + sharedTeamId + "/invitations")
+                .then().statusCode(201)
+                .extract().path("code");
+
         otherTeamId = given()
                 .contentType("application/json")
                 .body("{\"name\":\"Owner Only Team\"}")
@@ -80,8 +88,8 @@ class UserResourceTest extends AbstractResourceTest {
 
         given()
                 .contentType("application/json")
-                .body("{\"email\":\"" + SHARED_EMAIL + "\"}")
-                .when().post("/api/v1/team/" + sharedTeamId + "/join")
+                .body("{\"code\":\"" + sharedInviteCode + "\"}")
+                .when().post("/api/v1/invitations/accept")
                 .then().statusCode(200);
     }
 

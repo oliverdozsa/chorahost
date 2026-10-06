@@ -27,6 +27,7 @@ class ChoreCardResourceTest extends AbstractResourceTest {
     private static final String PLAYER_SUB = "card-player-sub";
     private static final String PLAYER_EMAIL = "card-player@chorahost.test";
 
+    private static String playerInviteCode;
     private static String teamId;
     private static String playerId;
     private static String cardId;
@@ -50,6 +51,13 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 .when().post("/api/v1/teams")
                 .then().statusCode(201)
                 .extract().path("id");
+
+        playerInviteCode = given()
+                .contentType("application/json")
+                .body("{\"email\":\"" + PLAYER_EMAIL + "\"}")
+                .when().post("/api/v1/teams/" + teamId + "/invitations")
+                .then().statusCode(201)
+                .extract().path("code");
     }
 
     @Test
@@ -65,21 +73,11 @@ class ChoreCardResourceTest extends AbstractResourceTest {
                 .when().get("/api/v1/users/me")
                 .then().statusCode(200)
                 .extract().path("id");
-    }
 
-    @Test
-    @Order(3)
-    @TestSecurity(user = ADMIN_SUB)
-    @OidcSecurity(claims = {
-            @Claim(key = "sub", value = ADMIN_SUB),
-            @Claim(key = "email", value = ADMIN_EMAIL),
-            @Claim(key = "name", value = "Card Admin")
-    })
-    void adminAddsPlayerToTeam() {
         given()
                 .contentType("application/json")
-                .body("{\"email\":\"" + PLAYER_EMAIL + "\"}")
-                .when().post("/api/v1/team/" + teamId + "/join")
+                .body("{\"code\":\"" + playerInviteCode + "\"}")
+                .when().post("/api/v1/invitations/accept")
                 .then().statusCode(200);
     }
 

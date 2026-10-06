@@ -78,27 +78,6 @@ public class TeamService {
         return toMemberResponse(target, targetMembership);
     }
 
-    @Transactional
-    public Team joinTeamByEmail(UUID teamId, String email) {
-        Team team = teamRepository.findByIdOptional(teamId)
-                .orElseThrow(() -> ApiException.notFound("Team not found: " + teamId));
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> ApiException.notFound("No user registered with email: " + email));
-
-        if (membershipRepository.findByUserAndTeam(user.id, teamId).isPresent()) {
-            throw ApiException.conflict("User is already a member of this team");
-        }
-
-        TeamMembership membership = new TeamMembership();
-        membership.userId = user.id;
-        membership.teamId = team.id;
-        membership.role = TeamRole.USER;
-        membershipRepository.persist(membership);
-
-        return team;
-    }
-
     public List<TeamMemberResponse> getLeaderboard(UUID teamId) {
         requireTeamExists(teamId);
 
@@ -154,6 +133,10 @@ public class TeamService {
                 .map(m -> new TeamMembershipResponse(m.teamId, teamNames.get(m.teamId), m.role, m.level,
                         m.currentXp, m.level * 1000, m.gold, m.joinedAt))
                 .toList();
+    }
+
+    public Optional<User> findUser(UUID userId) {
+        return userRepository.findByIdOptional(userId);
     }
 
     public Optional<TeamMembership> findMembership(UUID teamId, UUID userId) {

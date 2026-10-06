@@ -8,7 +8,9 @@ import java.util.UUID;
 import pub.galactic.chorahost.dto.AssignRoleRequest;
 import pub.galactic.chorahost.dto.ChoreCardResponse;
 import pub.galactic.chorahost.dto.ChoreCardTemplateResponse;
+import pub.galactic.chorahost.dto.CreateInvitationRequest;
 import pub.galactic.chorahost.dto.CreateTeamRequest;
+import pub.galactic.chorahost.dto.InvitationResponse;
 import pub.galactic.chorahost.dto.PagedResponse;
 import pub.galactic.chorahost.dto.SetGoldRequest;
 import pub.galactic.chorahost.dto.TeamMemberResponse;
@@ -21,12 +23,14 @@ import pub.galactic.chorahost.exception.ApiException;
 import pub.galactic.chorahost.security.CurrentUserService;
 import pub.galactic.chorahost.service.ChoreCardService;
 import pub.galactic.chorahost.service.ChoreCardTemplateService;
+import pub.galactic.chorahost.service.InvitationService;
 import pub.galactic.chorahost.service.PagedResult;
 import pub.galactic.chorahost.service.TeamService;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -55,6 +59,9 @@ public class TeamResource {
 
     @Inject
     ChoreCardTemplateService templateService;
+
+    @Inject
+    InvitationService invitationService;
 
     @GET
     @Path("/{teamId}/leaderboard")
@@ -119,5 +126,31 @@ public class TeamResource {
             @Valid SetGoldRequest request) {
         User requester = currentUserService.getOrCreateCurrentUser();
         return teamService.setGold(teamId, requester, userId, request.gold());
+    }
+
+    @POST
+    @Path("/{teamId}/invitations")
+    public Response invite(@PathParam("teamId") UUID teamId, @Valid CreateInvitationRequest request) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        InvitationResponse invitation = invitationService.invite(teamId, requester, request.email());
+        return Response.created(URI.create("/api/v1/teams/" + teamId + "/invitations/" + invitation.id()))
+                .entity(invitation)
+                .build();
+    }
+
+    @GET
+    @Path("/{teamId}/invitations")
+    public List<InvitationResponse> getInvitations(@PathParam("teamId") UUID teamId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return invitationService.listForTeam(teamId, requester);
+    }
+
+    @DELETE
+    @Path("/{teamId}/invitations/{invitationId}")
+    public Response revokeInvitation(@PathParam("teamId") UUID teamId,
+            @PathParam("invitationId") UUID invitationId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        invitationService.revoke(teamId, requester, invitationId);
+        return Response.noContent().build();
     }
 }

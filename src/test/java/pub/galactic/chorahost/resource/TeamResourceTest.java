@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 /**
- * End-to-end team lifecycle: create -> join -> role assignment -> leaderboard.
+ * End-to-end team lifecycle: create -> invite -> accept -> role assignment -> leaderboard.
  * Also covers that a user can belong to more than one team at once, with an
  * independent role per team.
  */
@@ -27,6 +27,7 @@ class TeamResourceTest extends AbstractResourceTest {
     private static final String MEMBER_SUB = "team-member-sub";
     private static final String MEMBER_EMAIL = "member@chorahost.test";
 
+    private static String memberInviteCode;
     private static String teamId;
     private static String secondTeamId;
     private static String memberId;
@@ -49,6 +50,13 @@ class TeamResourceTest extends AbstractResourceTest {
                 .body("name", is("The Chore Crusaders"))
                 .extract().path("id");
 
+        memberInviteCode = given()
+                .contentType("application/json")
+                .body("{\"email\":\"" + MEMBER_EMAIL + "\"}")
+                .when().post("/api/v1/teams/" + teamId + "/invitations")
+                .then().statusCode(201)
+                .extract().path("code");
+
         ownerId = given()
                 .when().get("/api/v1/users/me")
                 .then().statusCode(200)
@@ -64,7 +72,7 @@ class TeamResourceTest extends AbstractResourceTest {
             @Claim(key = "email", value = MEMBER_EMAIL),
             @Claim(key = "name", value = "Team Member")
     })
-    void memberProvisionsThenJoinsTeamByEmail() {
+    void memberProvisionsThenAcceptsInvitation() {
         // First authenticated call auto-provisions the local user record.
         memberId = given()
                 .when().get("/api/v1/users/me")
@@ -74,8 +82,8 @@ class TeamResourceTest extends AbstractResourceTest {
 
         given()
                 .contentType("application/json")
-                .body("{\"email\":\"" + MEMBER_EMAIL + "\"}")
-                .when().post("/api/v1/team/" + teamId + "/join")
+                .body("{\"code\":\"" + memberInviteCode + "\"}")
+                .when().post("/api/v1/invitations/accept")
                 .then().statusCode(200)
                 .body("id", is(teamId));
 
@@ -93,12 +101,12 @@ class TeamResourceTest extends AbstractResourceTest {
             @Claim(key = "email", value = MEMBER_EMAIL),
             @Claim(key = "name", value = "Team Member")
     })
-    void joiningTwiceIsRejected() {
+    void reusingAcceptedInvitationIsRejected() {
         given()
                 .contentType("application/json")
-                .body("{\"email\":\"" + MEMBER_EMAIL + "\"}")
-                .when().post("/api/v1/team/" + teamId + "/join")
-                .then().statusCode(409);
+                .body("{\"code\":\"" + memberInviteCode + "\"}")
+                .when().post("/api/v1/invitations/accept")
+                .then().statusCode(404);
     }
 
     @Test

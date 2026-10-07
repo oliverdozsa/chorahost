@@ -1,15 +1,18 @@
 package pub.galactic.chorahost.resource;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
+import io.quarkus.mailer.MockMailbox;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.quarkus.test.security.oidc.Claim;
 import io.quarkus.test.security.oidc.OidcSecurity;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,9 @@ class InvitationResourceTest extends AbstractResourceTest {
     private static final String GUEST_EMAIL = "invite-guest@chorahost.test";
     private static final String OTHER_SUB = "invite-other-sub";
     private static final String OTHER_EMAIL = "invite-other@chorahost.test";
+
+    @Inject
+    MockMailbox mailbox;
 
     private static String teamId;
     private static String firstInvitationId;
@@ -62,6 +68,10 @@ class InvitationResourceTest extends AbstractResourceTest {
                 .extract();
         firstInvitationId = response.path("id");
         firstCode = response.path("code");
+
+        var mails = mailbox.getMailsSentTo(GUEST_EMAIL);
+        assertThat(mails).hasSize(1);
+        assertThat(mails.get(0).getText()).contains(firstCode).contains("Invite Team");
 
         given()
                 .when().get("/api/v1/teams/" + teamId + "/invitations")

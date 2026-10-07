@@ -98,6 +98,8 @@ the full list.
 | `CHORAHOST_OIDC_CLIENT_ID` | Google OAuth client id the tokens are issued for | (empty) |
 | `CHORAHOST_OIDC_CLIENT_SECRET` | Google OAuth client secret | (empty) |
 | `CORS_ORIGINS` | Allowed browser origins | `http://localhost:4200` |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | Brevo SMTP login and SMTP key, used to email invitations | (empty) |
+| `MAIL_FROM` | Sender address, must be verified in Brevo | `noreply@chorahost.local` |
 
 The schema is owned by Flyway (`src/main/resources/db/migration`) and applied
 at startup. Hibernate only validates it.

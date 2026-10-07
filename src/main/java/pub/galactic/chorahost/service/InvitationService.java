@@ -23,6 +23,7 @@ import pub.galactic.chorahost.repository.TeamInvitationRepository;
 import pub.galactic.chorahost.repository.TeamMembershipRepository;
 import pub.galactic.chorahost.repository.TeamRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
@@ -44,6 +45,9 @@ public class InvitationService {
 
     @Inject
     TeamService teamService;
+
+    @Inject
+    Event<InvitationCreated> invitationCreated;
 
     /**
      * Invites an email address to a team. Any still-pending invitation for the
@@ -77,6 +81,10 @@ public class InvitationService {
         invitation.invitedBy = requester.id;
         invitation.expiresAt = Instant.now().plus(INVITATION_TTL);
         invitationRepository.persist(invitation);
+
+        // Observed after the transaction commits, so a rolled-back invitation is never mailed.
+        invitationCreated.fire(new InvitationCreated(normalizedEmail, team.name, requester.name, code,
+                invitation.expiresAt));
 
         return InvitationResponse.from(invitation, team.name, code);
     }

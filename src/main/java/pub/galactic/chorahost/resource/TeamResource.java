@@ -12,7 +12,11 @@ import pub.galactic.chorahost.dto.CreateInvitationRequest;
 import pub.galactic.chorahost.dto.CreateTeamRequest;
 import pub.galactic.chorahost.dto.InvitationResponse;
 import pub.galactic.chorahost.dto.PagedResponse;
+import pub.galactic.chorahost.dto.ExtendSeasonRequest;
+import pub.galactic.chorahost.dto.SeasonResponse;
+import pub.galactic.chorahost.dto.SeasonResultResponse;
 import pub.galactic.chorahost.dto.SetGoldRequest;
+import pub.galactic.chorahost.dto.SetSeasonLengthRequest;
 import pub.galactic.chorahost.dto.TeamMemberResponse;
 import pub.galactic.chorahost.dto.TeamResponse;
 import pub.galactic.chorahost.entity.ChoreCard;
@@ -25,6 +29,7 @@ import pub.galactic.chorahost.service.ChoreCardService;
 import pub.galactic.chorahost.service.ChoreCardTemplateService;
 import pub.galactic.chorahost.service.InvitationService;
 import pub.galactic.chorahost.service.PagedResult;
+import pub.galactic.chorahost.service.SeasonService;
 import pub.galactic.chorahost.service.TeamService;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
@@ -63,10 +68,58 @@ public class TeamResource {
     @Inject
     InvitationService invitationService;
 
+    @Inject
+    SeasonService seasonService;
+
     @GET
     @Path("/{teamId}/leaderboard")
     public List<TeamMemberResponse> getLeaderboard(@PathParam("teamId") UUID teamId) {
         return teamService.getLeaderboard(teamId);
+    }
+
+    @GET
+    @Path("/{teamId}/seasons")
+    public List<SeasonResponse> getSeasons(@PathParam("teamId") UUID teamId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return seasonService.list(teamId, requester).stream().map(SeasonResponse::from).toList();
+    }
+
+    @GET
+    @Path("/{teamId}/seasons/current")
+    public SeasonResponse getCurrentSeason(@PathParam("teamId") UUID teamId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return SeasonResponse.from(seasonService.getCurrent(teamId, requester));
+    }
+
+    /** Final standings of an ended season (empty while it is still running). */
+    @GET
+    @Path("/{teamId}/seasons/{seasonId}/results")
+    public List<SeasonResultResponse> getSeasonResults(@PathParam("teamId") UUID teamId,
+            @PathParam("seasonId") UUID seasonId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return seasonService.getResults(teamId, seasonId, requester);
+    }
+
+    @POST
+    @Path("/{teamId}/seasons/end")
+    @Consumes(MediaType.WILDCARD)
+    public SeasonResponse endSeason(@PathParam("teamId") UUID teamId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return SeasonResponse.from(seasonService.endNow(teamId, requester));
+    }
+
+    @POST
+    @Path("/{teamId}/seasons/extend")
+    public SeasonResponse extendSeason(@PathParam("teamId") UUID teamId, @Valid ExtendSeasonRequest request) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return SeasonResponse.from(seasonService.extend(teamId, requester, request.days()));
+    }
+
+    @PUT
+    @Path("/{teamId}/season-length")
+    public TeamResponse setSeasonLength(@PathParam("teamId") UUID teamId, @Valid SetSeasonLengthRequest request) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return TeamResponse.from(seasonService.setLength(teamId, requester, request.days()));
     }
 
     @GET

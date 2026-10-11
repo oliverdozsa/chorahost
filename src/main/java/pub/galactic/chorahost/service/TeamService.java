@@ -33,6 +33,9 @@ public class TeamService {
     @Inject
     TeamMembershipRepository membershipRepository;
 
+    @Inject
+    SeasonService seasonService;
+
     @Transactional
     public Team createTeam(String name, User creator) {
         Team team = new Team();
@@ -44,6 +47,7 @@ public class TeamService {
         membership.teamId = team.id;
         membership.role = TeamRole.TEAM_ADMIN;
         membershipRepository.persist(membership);
+        seasonService.startFirstSeason(team);
 
         return team;
     }

@@ -5,9 +5,9 @@ import java.util.UUID;
 
 import pub.galactic.chorahost.entity.Team;
 
-public record TeamResponse(UUID id, String name, Instant createdAt) {
+public record TeamResponse(UUID id, String name, int seasonLengthDays, Instant createdAt) {
 
     public static TeamResponse from(Team team) {
-        return new TeamResponse(team.id, team.name, team.createdAt);
+        return new TeamResponse(team.id, team.name, team.seasonLengthDays, team.createdAt);
     }
 }

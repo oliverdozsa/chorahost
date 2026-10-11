@@ -27,6 +27,12 @@ Built with Quarkus 3 (Java 21), PostgreSQL, Flyway and Google OIDC.
   minutes) or N minutes after the previous card was verified.
 - **Levelling.** Reaching the next level takes `level × 1000` XP, with overflow
   carried into the following level.
+- **Seasons.** Each team runs back-to-back seasons (default 30 days; admins can
+  set 7-365 days for future seasons). When one ends, a background job archives
+  every member's final rank, level, XP, gold and verified-card count as season
+  results, then resets level, XP and gold to start fresh. Rewards are paid at
+  verification time into whichever season is running. Admins can end a season
+  early or extend the running one. Cards and templates are never reset.
 
 ## Getting started
 
@@ -64,12 +70,13 @@ served by the SmallRye OpenAPI extension at `/q/openapi`.
 | --- | --- |
 | Users | `GET /users/me`, `GET /users/{id}`, `GET /users/{id}/hand` |
 | Teams | `POST /teams`, `GET /teams/{id}/leaderboard`, `GET /teams/{id}/cards`, `GET /teams/{id}/card-templates`, `POST /teams/{id}/role`, `PUT /teams/{id}/members/{userId}/gold` |
+| Seasons | `GET /teams/{id}/seasons`, `GET /teams/{id}/seasons/current`, `GET /teams/{id}/seasons/{seasonId}/results`, `PUT /teams/{id}/season-length`, `POST /teams/{id}/seasons/end`, `POST /teams/{id}/seasons/extend` |
 | Invitations (admin side) | `POST`/`GET /teams/{id}/invitations`, `DELETE /teams/{id}/invitations/{invitationId}` |
 | Invitations (invitee side) | `GET /invitations`, `POST /invitations/accept` (body `{"code": "..."}`), `POST /invitations/{id}/accept` |
 | Cards | `POST /cards`, `PUT`/`DELETE /cards/{id}`, `POST /cards/{id}/claim`, `/unclaim`, `/complete`, `/acknowledge-reward`, `/verify` |
 | Card templates | `POST /card-templates`, `PUT`/`DELETE /card-templates/{id}` |
 
-Creating, editing, deleting and verifying cards, and managing invitations,
+Creating, editing, deleting and verifying cards, managing invitations and managing seasons (length, end, extend),
 require `ADMIN` or `TEAM_ADMIN` in the card's team. Assigning roles requires
 `TEAM_ADMIN`.
 

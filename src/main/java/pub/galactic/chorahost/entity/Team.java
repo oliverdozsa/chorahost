@@ -25,6 +25,9 @@ public class Team extends PanacheEntityBase {
     @Column(nullable = false)
     public String name;
 
+    @Column(name = "season_length_days", nullable = false)
+    public Integer seasonLengthDays = 30;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;
 

@@ -33,6 +33,13 @@ Built with Quarkus 3 (Java 21), PostgreSQL, Flyway and Google OIDC.
   results, then resets level, XP and gold to start fresh. Rewards are paid at
   verification time into whichever season is running. Admins can end a season
   early or extend the running one. Cards and templates are never reset.
+- **Shop.** Each team has its own shop. Admins list items with a name, a gold
+  price, an optional image URL and a stock (leave it out for unlimited).
+  Members spend the gold of their membership in that team, any time, on one or
+  more units of an item. Purchases are recorded with the name and price paid,
+  and admins mark them fulfilled once handed over. The shop stays open across
+  seasons (only the gold is reset). Deleting an item just hides it, so history
+  is kept. There are no refunds.
 
 ## Getting started
 
@@ -73,10 +80,11 @@ served by the SmallRye OpenAPI extension at `/q/openapi`.
 | Seasons | `GET /teams/{id}/seasons`, `GET /teams/{id}/seasons/current`, `GET /teams/{id}/seasons/{seasonId}/results`, `PUT /teams/{id}/season-length`, `POST /teams/{id}/seasons/end`, `POST /teams/{id}/seasons/extend` |
 | Invitations (admin side) | `POST`/`GET /teams/{id}/invitations`, `DELETE /teams/{id}/invitations/{invitationId}` |
 | Invitations (invitee side) | `GET /invitations`, `POST /invitations/accept` (body `{"code": "..."}`), `POST /invitations/{id}/accept` |
+| Shop | `GET`/`POST /teams/{id}/shop/items`, `PUT`/`DELETE /teams/{id}/shop/items/{itemId}`, `POST /teams/{id}/shop/items/{itemId}/purchase` (body `{"quantity": 1}`), `GET /teams/{id}/shop/purchases` (`?all=true` for admins), `PUT /teams/{id}/shop/purchases/{purchaseId}/fulfilled` |
 | Cards | `POST /cards`, `PUT`/`DELETE /cards/{id}`, `POST /cards/{id}/claim`, `/unclaim`, `/complete`, `/acknowledge-reward`, `/verify` |
 | Card templates | `POST /card-templates`, `PUT`/`DELETE /card-templates/{id}` |
 
-Creating, editing, deleting and verifying cards, managing invitations and managing seasons (length, end, extend),
+Creating, editing, deleting and verifying cards, managing invitations, managing seasons (length, end, extend) and managing shop items and fulfilment,
 require `ADMIN` or `TEAM_ADMIN` in the card's team. Assigning roles requires
 `TEAM_ADMIN`.
 
@@ -138,7 +146,7 @@ Dockerfiles for JVM and native images are in `src/main/docker`.
 ```
 src/main/java/pub/galactic/chorahost/
   resource/    JAX-RS endpoints
-  service/     business logic (teams, invitations, cards, recurrence, gamification)
+  service/     business logic (teams, invitations, cards, recurrence, gamification, shop)
   repository/  Panache repositories
   entity/      JPA entities
   dto/         request/response records

@@ -3,6 +3,8 @@ package pub.galactic.chorahost.resource;
 import pub.galactic.chorahost.repository.ChoreCardRepository;
 import pub.galactic.chorahost.repository.ChoreCardTemplateRepository;
 import pub.galactic.chorahost.repository.SeasonRepository;
+import pub.galactic.chorahost.repository.ShopItemRepository;
+import pub.galactic.chorahost.repository.ShopPurchaseRepository;
 import pub.galactic.chorahost.repository.SeasonResultRepository;
 import pub.galactic.chorahost.repository.TeamInvitationRepository;
 import pub.galactic.chorahost.repository.TeamMembershipRepository;
@@ -35,6 +37,8 @@ abstract class AbstractResourceTest {
     @BeforeAll
     static void cleanDatabase() {
         QuarkusTransaction.requiringNew().run(() -> {
+            Arc.container().instance(ShopPurchaseRepository.class).get().deleteAll();
+            Arc.container().instance(ShopItemRepository.class).get().deleteAll();
             Arc.container().instance(ChoreCardRepository.class).get().deleteAll();
             Arc.container().instance(ChoreCardTemplateRepository.class).get().deleteAll();
             Arc.container().instance(TeamInvitationRepository.class).get().deleteAll();

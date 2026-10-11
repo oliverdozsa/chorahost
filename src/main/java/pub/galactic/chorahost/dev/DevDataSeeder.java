@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import pub.galactic.chorahost.entity.ChoreCard;
+import pub.galactic.chorahost.entity.ShopItem;
 import pub.galactic.chorahost.entity.Team;
 import pub.galactic.chorahost.entity.TeamMembership;
 import pub.galactic.chorahost.entity.User;
@@ -11,6 +12,7 @@ import pub.galactic.chorahost.enums.CardStatus;
 import pub.galactic.chorahost.enums.Rarity;
 import pub.galactic.chorahost.enums.TeamRole;
 import pub.galactic.chorahost.repository.ChoreCardRepository;
+import pub.galactic.chorahost.repository.ShopItemRepository;
 import pub.galactic.chorahost.repository.TeamMembershipRepository;
 import pub.galactic.chorahost.repository.TeamRepository;
 import pub.galactic.chorahost.repository.UserRepository;
@@ -46,6 +48,9 @@ public class DevDataSeeder {
     @Inject
     ChoreCardRepository choreCardRepository;
 
+    @Inject
+    ShopItemRepository shopItemRepository;
+
     @Transactional
     void onStart(@Observes StartupEvent event) {
         if (teamRepository.count() > 0) {
@@ -73,6 +78,9 @@ public class DevDataSeeder {
         card(household, "Mow the lawn", "Mow front and back yard, trim edges.",
                 Rarity.EPIC, 7, 60, 60, 30, "Golden Shears", CardStatus.VERIFIED, alice, null);
 
+        shopItem(household, "Pick the movie", 50, null);
+        shopItem(household, "Pizza night", 200, 3);
+
         Team roomies = team("Downtown Roomies");
         membership(roomies, carol, TeamRole.TEAM_ADMIN);
         membership(roomies, dave, TeamRole.USER);
@@ -84,6 +92,15 @@ public class DevDataSeeder {
                 Rarity.RARE, 4, 30, 25, 15, null, CardStatus.CLAIMED, dave, null);
         card(roomies, "Organize the pantry", "Sort and label all pantry shelves.",
                 Rarity.LEGENDARY, 9, 90, 100, 50, "Master Organizer Badge", CardStatus.VERIFIED, carol, null);
+    }
+
+    private void shopItem(Team team, String name, int price, Integer stock) {
+        ShopItem item = new ShopItem();
+        item.teamId = team.id;
+        item.name = name;
+        item.price = price;
+        item.stock = stock;
+        shopItemRepository.persist(item);
     }
 
     private User user(String email, String name) {

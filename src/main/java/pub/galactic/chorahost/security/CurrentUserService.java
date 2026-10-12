@@ -40,6 +40,12 @@ public class CurrentUserService {
             throw new ApiException(jakarta.ws.rs.core.Response.Status.UNAUTHORIZED, "Authentication required");
         }
 
+        if (securityIdentity.getPrincipal() instanceof SessionPrincipal session) {
+            cached = userRepository.findByIdOptional(session.userId())
+                    .orElseThrow(() -> new ApiException(jakarta.ws.rs.core.Response.Status.UNAUTHORIZED, "Unknown user"));
+            return cached;
+        }
+
         String email;
         String name;
         String givenName;

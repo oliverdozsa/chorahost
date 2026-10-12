@@ -1,5 +1,6 @@
 package pub.galactic.chorahost.resource;
 
+import pub.galactic.chorahost.repository.AuthSessionRepository;
 import pub.galactic.chorahost.repository.ChoreCardRepository;
 import pub.galactic.chorahost.repository.ChoreCardTemplateRepository;
 import pub.galactic.chorahost.repository.SeasonRepository;
@@ -46,6 +47,7 @@ abstract class AbstractResourceTest {
             Arc.container().instance(SeasonRepository.class).get().deleteAll();
             Arc.container().instance(TeamMembershipRepository.class).get().deleteAll();
             Arc.container().instance(TeamRepository.class).get().deleteAll();
+            Arc.container().instance(AuthSessionRepository.class).get().deleteAll();
             Arc.container().instance(UserRepository.class).get().deleteAll();
         });
     }

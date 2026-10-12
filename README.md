@@ -59,8 +59,17 @@ emily at `@example.com`).
 
 ### Authenticating
 
-All `/api/*` endpoints require a Google-issued ID token as a bearer token. In
-dev mode you can skip Google entirely and impersonate any user with a header:
+All `/api/*` endpoints require a bearer token, either a Google-issued ID token
+or a chorahost session token. Google ID tokens only last an hour, so clients
+sign in with Google once, trade the ID token for a session token with
+`POST /api/v1/auth/session`, and send that from then on. The response is
+`{token, expiresAt, name, email, picture}`. Session tokens start with `chs_`,
+last 30 days and slide forward as they are used, so a client that is opened
+now and then stays signed in. `DELETE /api/v1/auth/session` revokes the one in
+use. A session token cannot mint another session; renewal goes back through
+Google.
+
+In dev mode you can skip Google entirely and impersonate any user with a header:
 
 ```shell
 curl -H 'X-Dev-User: alice@example.com' http://localhost:8080/api/v1/users/me
@@ -75,6 +84,7 @@ served by the SmallRye OpenAPI extension at `/q/openapi`.
 
 | Area | Endpoints |
 | --- | --- |
+| Auth | `POST /auth/session` (Google ID token in, session token out), `DELETE /auth/session` |
 | Users | `GET /users/me`, `GET /users/{id}`, `GET /users/{id}/hand` |
 | Teams | `POST /teams`, `GET /teams/{id}/leaderboard`, `GET /teams/{id}/cards`, `GET /teams/{id}/card-templates`, `POST /teams/{id}/role`, `PUT /teams/{id}/members/{userId}/gold` |
 | Seasons | `GET /teams/{id}/seasons`, `GET /teams/{id}/seasons/current`, `GET /teams/{id}/seasons/{seasonId}/results`, `PUT /teams/{id}/season-length`, `POST /teams/{id}/seasons/end`, `POST /teams/{id}/seasons/extend` |

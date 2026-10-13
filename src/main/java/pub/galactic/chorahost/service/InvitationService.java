@@ -32,7 +32,7 @@ public class InvitationService {
 
     static final Duration INVITATION_TTL = Duration.ofDays(7);
 
-    private static final SecureRandom RANDOM = new SecureRandom();
+    private final SecureRandom RANDOM = new SecureRandom();
 
     @Inject
     TeamInvitationRepository invitationRepository;
@@ -174,7 +174,7 @@ public class InvitationService {
         return email.trim().toLowerCase();
     }
 
-    private static String generateCode() {
+    private String generateCode() {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);

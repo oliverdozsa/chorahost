@@ -36,7 +36,7 @@ public class AuthSessionService {
     public static final String TOKEN_PREFIX = "chs_";
 
     private static final Logger LOG = Logger.getLogger(AuthSessionService.class);
-    private static final SecureRandom RANDOM = new SecureRandom();
+    private final SecureRandom RANDOM = new SecureRandom();
 
     @Inject
     AuthSessionRepository sessionRepository;

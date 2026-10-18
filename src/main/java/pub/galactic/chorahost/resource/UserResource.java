@@ -64,6 +64,8 @@ public class UserResource {
     @GET
     @Path("/{userId}/hand")
     public java.util.List<ChoreCardResponse> getHand(@PathParam("userId") UUID userId) {
-        return choreCardService.getHand(userId).stream().map(ChoreCardResponse::from).toList();
+        User requester = currentUserService.getOrCreateCurrentUser();
+        return choreCardService.getHand(userId).stream()
+                .map(card -> ChoreCardResponse.from(card, requester.id)).toList();
     }
 }

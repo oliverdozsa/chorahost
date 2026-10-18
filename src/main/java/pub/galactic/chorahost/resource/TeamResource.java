@@ -131,7 +131,7 @@ public class TeamResource {
         User requester = currentUserService.getOrCreateCurrentUser();
         List<CardStatus> statuses = parseStatuses(status);
         PagedResult<ChoreCard> result = choreCardService.getCardsForTeam(teamId, statuses, requester, page, size);
-        return PagedResponse.from(result, ChoreCardResponse::from);
+        return PagedResponse.from(result, card -> ChoreCardResponse.from(card, requester.id));
     }
 
     private static List<CardStatus> parseStatuses(String status) {

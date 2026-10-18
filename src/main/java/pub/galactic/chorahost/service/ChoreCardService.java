@@ -76,6 +76,8 @@ public class ChoreCardService {
         card.goldReward = request.goldReward();
         card.itemDrop = request.itemDrop();
         card.imageUrl = request.imageUrl();
+        card.userImageUrls.clear();
+        card.userImageUrls.putAll(teamService.validateUserImageUrls(card.teamId, request.userImageUrls()));
         card.dueDateIntervalHours = request.dueDateIntervalHours();
         if (request.recurrence() != null) {
             request.recurrence().validate();
@@ -103,6 +105,8 @@ public class ChoreCardService {
         card.goldReward = request.goldReward();
         card.itemDrop = request.itemDrop();
         card.imageUrl = request.imageUrl();
+        card.userImageUrls.clear();
+        card.userImageUrls.putAll(teamService.validateUserImageUrls(card.teamId, request.userImageUrls()));
         card.dueDateIntervalHours = request.dueDateIntervalHours();
         if (request.recurrence() != null) {
             request.recurrence().validate();

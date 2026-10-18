@@ -35,6 +35,7 @@ class ChoreCardResourceTest extends AbstractResourceTest {
     private static String completedCardId;
     private static String dueDateCardId;
     private static String unclaimCardId;
+    private static String userImageCardId;
 
     @Test
     @Order(1)
@@ -726,6 +727,123 @@ class ChoreCardResourceTest extends AbstractResourceTest {
         given()
                 .when().post("/api/v1/cards/" + unclaimCardId + "/unclaim")
                 .then().statusCode(409);
+    }
+
+    @Test
+    @Order(39)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void adminCreatesCardWithUserImage() {
+        String fallback = "https://example.com/fallback.png";
+        String custom = "https://example.com/player.png";
+        String body = cardPayload(5, 1).replaceFirst("}$",
+                ",\"imageUrl\":\"" + fallback + "\",\"userImageUrls\":{\"" + playerId + "\":\"" + custom + "\"}}");
+        userImageCardId = given()
+                .contentType("application/json")
+                .body(body)
+                .when().post("/api/v1/cards")
+                .then().statusCode(201)
+                .body("imageUrl", is(fallback))
+                .body("resolvedImageUrl", is(fallback))
+                .body("userImageUrls." + playerId, is(custom))
+                .extract().path("id");
+    }
+
+    @Test
+    @Order(40)
+    @TestSecurity(user = PLAYER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = PLAYER_SUB),
+            @Claim(key = "email", value = PLAYER_EMAIL),
+            @Claim(key = "name", value = "Card Player")
+    })
+    void claimingSwitchesToAssigneeImage() {
+        given()
+                .when().post("/api/v1/cards/" + userImageCardId + "/claim")
+                .then().statusCode(200)
+                .body("resolvedImageUrl", is("https://example.com/player.png"))
+                .body("imageUrl", is("https://example.com/fallback.png"));
+
+        given()
+                .when().post("/api/v1/cards/" + userImageCardId + "/unclaim")
+                .then().statusCode(200)
+                // Unassigned again, but the logged in player still has their own image.
+                .body("resolvedImageUrl", is("https://example.com/player.png"));
+    }
+
+    @Test
+    @Order(41)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void nonMemberImageRejected() {
+        // Unassigned and the admin has no override, so the fallback applies.
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/cards")
+                .then().statusCode(200)
+                .body("items.find { it.id == '" + userImageCardId + "' }.resolvedImageUrl",
+                        is("https://example.com/fallback.png"));
+
+        String body = cardPayload(5, 1).replaceFirst("}$",
+                ",\"userImageUrls\":{\"" + java.util.UUID.randomUUID() + "\":\"https://example.com/x.png\"}}");
+        given()
+                .contentType("application/json")
+                .body(body)
+                .when().post("/api/v1/cards")
+                .then().statusCode(400);
+    }
+
+    @Test
+    @Order(42)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void updateReplacesAndClearsUserImages() {
+        String url = "https://example.com/replaced.png";
+        String update = editedCardPayload("Wash the dishes", 5, 1).replaceFirst("}$",
+                ",\"imageUrl\":\"https://example.com/fallback.png\",\"userImageUrls\":{\"" + playerId + "\":\"" + url + "\"}}");
+        given()
+                .contentType("application/json")
+                .body(update)
+                .when().put("/api/v1/cards/" + userImageCardId)
+                .then().statusCode(200)
+                .body("userImageUrls." + playerId, is(url));
+
+        given()
+                .contentType("application/json")
+                .body(editedCardPayload("Wash the dishes", 5, 1))
+                .when().put("/api/v1/cards/" + userImageCardId)
+                .then().statusCode(200)
+                .body("userImageUrls.size()", is(0))
+                .body("resolvedImageUrl", org.hamcrest.Matchers.nullValue());
+    }
+
+    @Test
+    @Order(43)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void nonHttpUserImageUrlIsRejected() {
+        String body = cardPayload(5, 1).replaceFirst("}$",
+                ",\"userImageUrls\":{\"" + playerId + "\":\"javascript:alert(1)\"}}");
+        given()
+                .contentType("application/json")
+                .body(body)
+                .when().post("/api/v1/cards")
+                .then().statusCode(400);
     }
 
     private static String editedCardPayload(String title, int xpReward, int goldReward) {

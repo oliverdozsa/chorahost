@@ -1,5 +1,8 @@
 package pub.galactic.chorahost.dto;
 
+import java.util.Map;
+import java.util.UUID;
+
 import pub.galactic.chorahost.enums.Rarity;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -17,6 +20,7 @@ public record UpdateChoreCardRequest(
         @NotNull Integer goldReward,
         String itemDrop,
         String imageUrl,
+        Map<UUID, String> userImageUrls,
         @Min(1) Integer dueDateIntervalHours,
         @Valid RecurrenceDto recurrence) {
 }

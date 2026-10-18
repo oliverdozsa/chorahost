@@ -1,18 +1,25 @@
 package pub.galactic.chorahost.entity;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import pub.galactic.chorahost.enums.Rarity;
 import pub.galactic.chorahost.enums.RecurrenceType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -68,6 +75,16 @@ public class ChoreCardTemplate extends PanacheEntityBase {
 
     @Column(name = "image_url")
     public String imageUrl;
+
+    /**
+     * Per-user image overrides, keyed by user id. {@link #imageUrl} is the
+     * fallback for users without an entry.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "chore_card_template_user_images", joinColumns = @JoinColumn(name = "template_id"))
+    @MapKeyColumn(name = "user_id")
+    @Column(name = "image_url", nullable = false)
+    public Map<UUID, String> userImageUrls = new HashMap<>();
 
     /**
      * Hours the assignee has to complete a card instantiated from this

@@ -67,6 +67,7 @@ public class RecurrenceService {
         fresh.goldReward = source.goldReward;
         fresh.itemDrop = source.itemDrop;
         fresh.imageUrl = source.imageUrl;
+        fresh.userImageUrls.putAll(source.userImageUrls);
         fresh.dueDateIntervalHours = source.dueDateIntervalHours;
         fresh.recurrenceType = source.recurrenceType;
         fresh.recurrenceIntervalMinutes = source.recurrenceIntervalMinutes;

@@ -1,6 +1,7 @@
 package pub.galactic.chorahost.dto;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import pub.galactic.chorahost.entity.ChoreCardTemplate;
@@ -18,6 +19,7 @@ public record ChoreCardTemplateResponse(
         Integer goldReward,
         String itemDrop,
         String imageUrl,
+        Map<UUID, String> userImageUrls,
         Instant createdAt,
         Integer dueDateIntervalHours,
         RecurrenceDto recurrence) {
@@ -35,6 +37,7 @@ public record ChoreCardTemplateResponse(
                 template.goldReward,
                 template.itemDrop,
                 template.imageUrl,
+                Map.copyOf(template.userImageUrls),
                 template.createdAt,
                 template.dueDateIntervalHours,
                 RecurrenceDto.of(template.recurrenceType, template.recurrenceIntervalMinutes, template.recurrenceSchedule));

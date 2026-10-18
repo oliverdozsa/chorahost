@@ -147,6 +147,30 @@ public class TeamService {
         return userRepository.findByIdOptional(userId);
     }
 
+    /**
+     * Validates per-user image overrides for a team and returns the entries to
+     * store: blank URLs are dropped, the rest must be http(s) URLs for members.
+     */
+    public Map<UUID, String> validateUserImageUrls(UUID teamId, Map<UUID, String> userImageUrls) {
+        Map<UUID, String> valid = new java.util.HashMap<>();
+        if (userImageUrls == null) {
+            return valid;
+        }
+        userImageUrls.forEach((userId, url) -> {
+            if (url == null || url.isBlank()) {
+                return;
+            }
+            if (!url.matches("^https?://\\S+$")) {
+                throw ApiException.badRequest("userImageUrls values must be http(s) URLs");
+            }
+            if (findMembership(teamId, userId).isEmpty()) {
+                throw ApiException.badRequest("User is not a member of this team: " + userId);
+            }
+            valid.put(userId, url);
+        });
+        return valid;
+    }
+
     public Optional<TeamMembership> findMembership(UUID teamId, UUID userId) {
         return membershipRepository.findByUserAndTeam(userId, teamId);
     }

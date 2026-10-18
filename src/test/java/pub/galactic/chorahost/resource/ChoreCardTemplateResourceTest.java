@@ -236,6 +236,83 @@ class ChoreCardTemplateResourceTest extends AbstractResourceTest {
         assertNotBlank(dueDateTemplateId);
     }
 
+    @Test
+    @Order(11)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Template Admin")
+    })
+    void userImageUrlsAreStoredUpdatedAndCleared() {
+        String adminId = given().when().get("/api/v1/users/me").then().statusCode(200).extract().path("id");
+        String fallback = "https://example.com/template.png";
+        String custom = "https://example.com/admin.png";
+
+        String id = given()
+                .contentType("application/json")
+                .body(templateWithImages(fallback, "{\"" + adminId + "\":\"" + custom + "\"}"))
+                .when().post("/api/v1/card-templates")
+                .then().statusCode(201)
+                .body("imageUrl", is(fallback))
+                .body("userImageUrls." + adminId, is(custom))
+                .extract().path("id");
+
+        String replaced = "https://example.com/admin2.png";
+        given()
+                .contentType("application/json")
+                .body(templateWithImages(fallback, "{\"" + adminId + "\":\"" + replaced + "\"}"))
+                .when().put("/api/v1/card-templates/" + id)
+                .then().statusCode(200)
+                .body("userImageUrls." + adminId, is(replaced));
+
+        given()
+                .contentType("application/json")
+                .body(templateWithImages(fallback, "{}"))
+                .when().put("/api/v1/card-templates/" + id)
+                .then().statusCode(200)
+                .body("imageUrl", is(fallback))
+                .body("userImageUrls.size()", is(0));
+    }
+
+    @Test
+    @Order(12)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Template Admin")
+    })
+    void invalidUserImageUrlsAreRejected() {
+        String adminId = given().when().get("/api/v1/users/me").then().statusCode(200).extract().path("id");
+
+        given()
+                .contentType("application/json")
+                .body(templateWithImages(null, "{\"" + java.util.UUID.randomUUID() + "\":\"https://example.com/x.png\"}"))
+                .when().post("/api/v1/card-templates")
+                .then().statusCode(400);
+
+        given()
+                .contentType("application/json")
+                .body(templateWithImages(null, "{\"" + adminId + "\":\"javascript:alert(1)\"}"))
+                .when().post("/api/v1/card-templates")
+                .then().statusCode(400);
+    }
+
+    private static String templateWithImages(String imageUrl, String userImageUrls) {
+        return "{"
+                + "\"teamId\":\"" + teamId + "\","
+                + "\"title\":\"Sweep\","
+                + "\"rarity\":\"COMMON\","
+                + "\"complexity\":2,"
+                + "\"estimatedMinutes\":10,"
+                + "\"xpReward\":5,"
+                + "\"goldReward\":1,"
+                + (imageUrl != null ? "\"imageUrl\":\"" + imageUrl + "\"," : "")
+                + "\"userImageUrls\":" + userImageUrls
+                + "}";
+    }
+
     private static String editedTemplatePayload(String title, int xpReward, int goldReward) {
         return "{"
                 + "\"title\":\"" + title + "\","

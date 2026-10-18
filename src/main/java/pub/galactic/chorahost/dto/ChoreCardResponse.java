@@ -1,6 +1,7 @@
 package pub.galactic.chorahost.dto;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import pub.galactic.chorahost.entity.ChoreCard;
@@ -18,6 +19,8 @@ public record ChoreCardResponse(
         Integer goldReward,
         String itemDrop,
         String imageUrl,
+        Map<UUID, String> userImageUrls,
+        String resolvedImageUrl,
         CardStatus status,
         UUID assignedUserId,
         UUID teamId,
@@ -31,7 +34,7 @@ public record ChoreCardResponse(
         Instant dueAt,
         RecurrenceDto recurrence) {
 
-    public static ChoreCardResponse from(ChoreCard card) {
+    public static ChoreCardResponse from(ChoreCard card, UUID viewerId) {
         return new ChoreCardResponse(
                 card.id,
                 card.title,
@@ -43,6 +46,8 @@ public record ChoreCardResponse(
                 card.goldReward,
                 card.itemDrop,
                 card.imageUrl,
+                Map.copyOf(card.userImageUrls),
+                card.resolvedImageUrl(viewerId),
                 card.status,
                 card.assignedUserId,
                 card.teamId,

@@ -42,7 +42,7 @@ public class ChoreCardResource {
         User requester = currentUserService.getOrCreateCurrentUser();
         ChoreCard card = choreCardService.createCard(request, requester);
         return Response.created(URI.create("/api/v1/cards/" + card.id))
-                .entity(ChoreCardResponse.from(card))
+                .entity(ChoreCardResponse.from(card, requester.id))
                 .build();
     }
 
@@ -51,7 +51,7 @@ public class ChoreCardResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ChoreCardResponse updateCard(@PathParam("cardId") UUID cardId, @Valid UpdateChoreCardRequest request) {
         User requester = currentUserService.getOrCreateCurrentUser();
-        return ChoreCardResponse.from(choreCardService.updateCard(cardId, request, requester));
+        return ChoreCardResponse.from(choreCardService.updateCard(cardId, request, requester), requester.id);
     }
 
     @DELETE
@@ -66,28 +66,28 @@ public class ChoreCardResource {
     @Path("/{cardId}/claim")
     public ChoreCardResponse claimCard(@PathParam("cardId") UUID cardId) {
         User requester = currentUserService.getOrCreateCurrentUser();
-        return ChoreCardResponse.from(choreCardService.claimCard(cardId, requester));
+        return ChoreCardResponse.from(choreCardService.claimCard(cardId, requester), requester.id);
     }
 
     @POST
     @Path("/{cardId}/unclaim")
     public ChoreCardResponse unclaimCard(@PathParam("cardId") UUID cardId) {
         User requester = currentUserService.getOrCreateCurrentUser();
-        return ChoreCardResponse.from(choreCardService.unclaimCard(cardId, requester));
+        return ChoreCardResponse.from(choreCardService.unclaimCard(cardId, requester), requester.id);
     }
 
     @POST
     @Path("/{cardId}/complete")
     public ChoreCardResponse completeCard(@PathParam("cardId") UUID cardId) {
         User requester = currentUserService.getOrCreateCurrentUser();
-        return ChoreCardResponse.from(choreCardService.completeCard(cardId, requester));
+        return ChoreCardResponse.from(choreCardService.completeCard(cardId, requester), requester.id);
     }
 
     @POST
     @Path("/{cardId}/acknowledge-reward")
     public ChoreCardResponse acknowledgeReward(@PathParam("cardId") UUID cardId) {
         User requester = currentUserService.getOrCreateCurrentUser();
-        return ChoreCardResponse.from(choreCardService.acknowledgeReward(cardId, requester));
+        return ChoreCardResponse.from(choreCardService.acknowledgeReward(cardId, requester), requester.id);
     }
 
     @POST
@@ -96,7 +96,7 @@ public class ChoreCardResource {
         User requester = currentUserService.getOrCreateCurrentUser();
         VerificationResult result = choreCardService.verifyCard(cardId, requester);
         return new CardVerificationResponse(
-                ChoreCardResponse.from(result.card()),
+                ChoreCardResponse.from(result.card(), requester.id),
                 result.xpGained(),
                 result.goldGained(),
                 result.leveledUp(),

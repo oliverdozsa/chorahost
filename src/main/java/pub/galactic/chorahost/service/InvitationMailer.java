@@ -22,11 +22,11 @@ public class InvitationMailer {
     Mailer mailer;
 
     void onInvitationCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) InvitationCreated event) {
-        String subject = event.inviterName() + " invited you to join " + event.teamName() + " on ChoraHost";
+        String subject = event.inviterName() + " invited you to join " + event.teamName() + " on ChoraForge";
         String body = """
                 Hi,
 
-                %s invited you to join the team "%s" on ChoraHost.
+                %s invited you to join the team "%s" on ChoraForge.
 
                 Sign in with this email address (%s) and use this invitation code to join:
 

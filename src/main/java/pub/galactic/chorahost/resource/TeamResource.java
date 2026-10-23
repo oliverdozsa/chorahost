@@ -74,6 +74,8 @@ public class TeamResource {
     @GET
     @Path("/{teamId}/leaderboard")
     public List<TeamMemberResponse> getLeaderboard(@PathParam("teamId") UUID teamId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        teamService.requireMembership(teamId, requester.id);
         return teamService.getLeaderboard(teamId);
     }
 
@@ -154,6 +156,8 @@ public class TeamResource {
     @GET
     @Path("/{teamId}/card-templates")
     public List<ChoreCardTemplateResponse> getTeamCardTemplates(@PathParam("teamId") UUID teamId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        teamService.requireMembership(teamId, requester.id);
         return templateService.getTemplatesForTeam(teamId).stream().map(ChoreCardTemplateResponse::from).toList();
     }
 

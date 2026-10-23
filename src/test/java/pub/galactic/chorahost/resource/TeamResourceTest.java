@@ -27,6 +27,9 @@ class TeamResourceTest extends AbstractResourceTest {
     private static final String MEMBER_SUB = "team-member-sub";
     private static final String MEMBER_EMAIL = "member@chorahost.test";
 
+    private static final String OUTSIDER_SUB = "team-outsider-sub";
+    private static final String OUTSIDER_EMAIL = "outsider@chorahost.test";
+
     private static String memberInviteCode;
     private static String teamId;
     private static String secondTeamId;
@@ -318,5 +321,50 @@ class TeamResourceTest extends AbstractResourceTest {
                 .body("{\"gold\":1}")
                 .when().put("/api/v1/teams/" + teamId + "/members/" + memberId + "/gold")
                 .then().statusCode(403);
+    }
+
+    @Test
+    @Order(15)
+    @TestSecurity(user = OUTSIDER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OUTSIDER_SUB),
+            @Claim(key = "email", value = OUTSIDER_EMAIL),
+            @Claim(key = "name", value = "Team Outsider")
+    })
+    void nonMemberCannotSeeLeaderboard() {
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/leaderboard")
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(16)
+    @TestSecurity(user = OUTSIDER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = OUTSIDER_SUB),
+            @Claim(key = "email", value = OUTSIDER_EMAIL),
+            @Claim(key = "name", value = "Team Outsider")
+    })
+    void nonMemberCannotListCardTemplates() {
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/card-templates")
+                .then().statusCode(403);
+    }
+
+    @Test
+    @Order(17)
+    @TestSecurity(user = MEMBER_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = MEMBER_SUB),
+            @Claim(key = "email", value = MEMBER_EMAIL),
+            @Claim(key = "name", value = "Team Member")
+    })
+    void plainUserMemberCanSeeLeaderboardAndCardTemplates() {
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/leaderboard")
+                .then().statusCode(200);
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/card-templates")
+                .then().statusCode(200);
     }
 }

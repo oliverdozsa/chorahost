@@ -177,6 +177,14 @@ public class TeamResource {
         return teamService.assignRole(teamId, requester, request.userId(), request.role());
     }
 
+    @DELETE
+    @Path("/{teamId}/members/{userId}")
+    public Response removeMember(@PathParam("teamId") UUID teamId, @PathParam("userId") UUID userId) {
+        User requester = currentUserService.getOrCreateCurrentUser();
+        teamService.removeMember(teamId, requester, userId);
+        return Response.noContent().build();
+    }
+
     @PUT
     @Path("/{teamId}/members/{userId}/gold")
     public TeamMemberResponse setMemberGold(@PathParam("teamId") UUID teamId, @PathParam("userId") UUID userId,

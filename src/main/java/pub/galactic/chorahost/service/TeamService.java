@@ -9,11 +9,14 @@ import java.util.stream.Collectors;
 
 import pub.galactic.chorahost.dto.TeamMemberResponse;
 import pub.galactic.chorahost.dto.TeamMembershipResponse;
+import pub.galactic.chorahost.entity.ChoreCard;
 import pub.galactic.chorahost.entity.Team;
 import pub.galactic.chorahost.entity.TeamMembership;
 import pub.galactic.chorahost.entity.User;
+import pub.galactic.chorahost.enums.CardStatus;
 import pub.galactic.chorahost.enums.TeamRole;
 import pub.galactic.chorahost.exception.ApiException;
+import pub.galactic.chorahost.repository.ChoreCardRepository;
 import pub.galactic.chorahost.repository.TeamMembershipRepository;
 import pub.galactic.chorahost.repository.TeamRepository;
 import pub.galactic.chorahost.repository.UserRepository;
@@ -32,6 +35,9 @@ public class TeamService {
 
     @Inject
     TeamMembershipRepository membershipRepository;
+
+    @Inject
+    ChoreCardRepository cardRepository;
 
     @Inject
     SeasonService seasonService;
@@ -71,6 +77,31 @@ public class TeamService {
         User target = userRepository.findByIdOptional(targetUserId)
                 .orElseThrow(() -> ApiException.notFound("User not found: " + targetUserId));
         return toMemberResponse(target, targetMembership);
+    }
+
+    /**
+     * Removes a member from the team and gives back the cards they had
+     * claimed or completed but that aren't verified yet.
+     */
+    @Transactional
+    public void removeMember(UUID teamId, User requester, UUID targetUserId) {
+        requireTeamAdmin(teamId, requester);
+
+        if (targetUserId.equals(requester.id)) {
+            throw ApiException.badRequest("You cannot remove yourself from the team");
+        }
+
+        TeamMembership targetMembership = membershipRepository.findByUserAndTeam(targetUserId, teamId)
+                .orElseThrow(() -> ApiException.notFound("User is not a member of this team"));
+
+        for (ChoreCard card : cardRepository.findUnverifiedByUserInTeam(targetUserId, teamId)) {
+            card.status = CardStatus.AVAILABLE;
+            card.assignedUserId = null;
+            card.claimedAt = null;
+            card.completedAt = null;
+            card.dueAt = null;
+        }
+        membershipRepository.delete(targetMembership);
     }
 
     @Transactional

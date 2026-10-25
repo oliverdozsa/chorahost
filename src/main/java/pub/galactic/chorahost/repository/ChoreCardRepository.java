@@ -40,6 +40,13 @@ public class ChoreCardRepository implements PanacheRepositoryBase<ChoreCard, UUI
                 .withLock(LockModeType.PESSIMISTIC_WRITE).list();
     }
 
+    /** Cards a user holds in a team that are not yet verified (claimed or completed), row-locked for reassignment. */
+    public List<ChoreCard> findUnverifiedByUserInTeam(UUID userId, UUID teamId) {
+        return find("assignedUserId = ?1 and teamId = ?2 and status in (?3, ?4)",
+                userId, teamId, CardStatus.CLAIMED, CardStatus.COMPLETED)
+                .withLock(LockModeType.PESSIMISTIC_WRITE).list();
+    }
+
     public List<ChoreCard> findHand(UUID userId) {
         return find("assignedUserId = ?1 and status in (?2, ?3)",
                 userId, CardStatus.CLAIMED, CardStatus.COMPLETED).list();

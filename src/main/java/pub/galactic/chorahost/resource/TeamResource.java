@@ -128,12 +128,30 @@ public class TeamResource {
     @Path("/{teamId}/cards")
     public PagedResponse<ChoreCardResponse> getTeamCards(@PathParam("teamId") UUID teamId,
             @QueryParam("status") String status,
+            @QueryParam("assigneeIds") String assigneeIds,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("" + ChoreCardService.DEFAULT_PAGE_SIZE) int size) {
         User requester = currentUserService.getOrCreateCurrentUser();
         List<CardStatus> statuses = parseStatuses(status);
-        PagedResult<ChoreCard> result = choreCardService.getCardsForTeam(teamId, statuses, requester, page, size);
+        PagedResult<ChoreCard> result = choreCardService.getCardsForTeam(teamId, statuses, parseUuids(assigneeIds), requester, page, size);
         return PagedResponse.from(result, card -> ChoreCardResponse.from(card, requester.id));
+    }
+
+    private static List<UUID> parseUuids(String ids) {
+        if (ids == null || ids.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> {
+                    try {
+                        return UUID.fromString(s);
+                    } catch (IllegalArgumentException e) {
+                        throw ApiException.badRequest("Invalid assignee id: " + s);
+                    }
+                })
+                .toList();
     }
 
     private static List<CardStatus> parseStatuses(String status) {

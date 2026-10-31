@@ -40,8 +40,8 @@ public class ChoreCardService {
     public static final int DEFAULT_PAGE_SIZE = 20;
     public static final int MAX_PAGE_SIZE = 100;
 
-    public PagedResult<ChoreCard> getCardsForTeam(UUID teamId, List<CardStatus> statuses, User requester,
-            int page, int size) {
+    public PagedResult<ChoreCard> getCardsForTeam(UUID teamId, List<CardStatus> statuses,
+            List<UUID> assigneeIds, User requester, int page, int size) {
         teamService.requireMembership(teamId, requester.id);
         if (page < 0) {
             throw ApiException.badRequest("page must be >= 0");
@@ -53,7 +53,7 @@ public class ChoreCardService {
         List<CardStatus> effectiveStatuses = (statuses == null || statuses.isEmpty())
                 ? List.of(CardStatus.AVAILABLE)
                 : statuses;
-        PanacheQuery<ChoreCard> query = choreCardRepository.findForTeamByStatuses(teamId, effectiveStatuses, page, size);
+        PanacheQuery<ChoreCard> query = choreCardRepository.findForTeamByStatuses(teamId, effectiveStatuses, assigneeIds, page, size);
         return new PagedResult<>(query.list(), page, size, query.count());
     }
 

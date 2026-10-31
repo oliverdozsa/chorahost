@@ -22,9 +22,13 @@ public class ChoreCardRepository implements PanacheRepositoryBase<ChoreCard, UUI
      * AVAILABLE - a single ordering that stays sensible even when statuses is
      * a mix (e.g. CLAIMED and VERIFIED together).
      */
-    public PanacheQuery<ChoreCard> findForTeamByStatuses(UUID teamId, List<CardStatus> statuses, int page, int size) {
-        return find("teamId = ?1 and status in ?2 "
-                + "order by coalesce(verifiedAt, completedAt, claimedAt, createdAt) desc", teamId, statuses)
+    public PanacheQuery<ChoreCard> findForTeamByStatuses(UUID teamId, List<CardStatus> statuses,
+            List<UUID> assigneeIds, int page, int size) {
+        String order = "order by coalesce(verifiedAt, completedAt, claimedAt, createdAt) desc";
+        if (assigneeIds == null || assigneeIds.isEmpty()) {
+            return find("teamId = ?1 and status in ?2 " + order, teamId, statuses).page(Page.of(page, size));
+        }
+        return find("teamId = ?1 and status in ?2 and assignedUserId in ?3 " + order, teamId, statuses, assigneeIds)
                 .page(Page.of(page, size));
     }
 

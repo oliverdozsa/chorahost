@@ -335,6 +335,62 @@ class ChoreCardResourceTest extends AbstractResourceTest {
     }
 
     @Test
+    @Order(16)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void teamCardsCanBeFilteredByAssignee() {
+        String base = "/api/v1/teams/" + teamId + "/cards?status=VERIFIED";
+
+        // cardId and bigCardId were completed by the player; the self-verified card belongs to the admin.
+        given()
+                .when().get(base + "&assigneeIds=" + playerId)
+                .then().statusCode(200)
+                .body("items.size()", org.hamcrest.Matchers.greaterThanOrEqualTo(2))
+                .body("items.findAll { it.assignedUserId != '" + playerId + "' }", org.hamcrest.Matchers.empty())
+                .body("items.find { it.id == '" + cardId + "' }.status", is("VERIFIED"))
+                .body("items.find { it.id == '" + bigCardId + "' }.status", is("VERIFIED"));
+
+        // Multiple ids (with whitespace) widen the result to both assignees.
+        String unknownId = "00000000-0000-0000-0000-000000000001";
+        given()
+                .when().get(base + "&assigneeIds=" + unknownId + ", " + playerId)
+                .then().statusCode(200)
+                .body("items.findAll { it.assignedUserId != '" + playerId + "' }", org.hamcrest.Matchers.empty())
+                .body("items.find { it.id == '" + cardId + "' }", notNullValue());
+
+        // An id that isn't assigned anything matches nothing.
+        given()
+                .when().get(base + "&assigneeIds=" + unknownId)
+                .then().statusCode(200)
+                .body("items", org.hamcrest.Matchers.empty())
+                .body("totalElements", is(0));
+
+        // Blank param behaves like no filter.
+        given()
+                .when().get(base + "&assigneeIds=")
+                .then().statusCode(200)
+                .body("items.find { it.id == '" + cardId + "' }", notNullValue());
+    }
+
+    @Test
+    @Order(16)
+    @TestSecurity(user = ADMIN_SUB)
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = ADMIN_SUB),
+            @Claim(key = "email", value = ADMIN_EMAIL),
+            @Claim(key = "name", value = "Card Admin")
+    })
+    void invalidAssigneeIdIsRejected() {
+        given()
+                .when().get("/api/v1/teams/" + teamId + "/cards?assigneeIds=not-a-uuid")
+                .then().statusCode(400);
+    }
+
+    @Test
     @Order(17)
     @TestSecurity(user = PLAYER_SUB)
     @OidcSecurity(claims = {
